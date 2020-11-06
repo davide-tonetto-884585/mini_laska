@@ -166,8 +166,7 @@ int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum co
     if ((colonnaFinaleInt == colonnaPedinaInt + 1 || colonnaFinaleInt == colonnaPedinaInt - 1) &&
         (mossa.posizioneFinale.riga == mossa.posizionePedina.riga + (1 * direzioneColore) ||
          (mossa.posizioneFinale.riga == mossa.posizionePedina.riga - (1 * direzioneColore) &&
-          scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine[altezzaPedina -
-                                                                                            1]->isPromossa))) {
+          scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine[altezzaPedina - 1]->isPromossa))) {
         return 1;
     }
         /*controllo che, se la mossa si muove di due righe (per mangiare), questa sia effettivamente valida*/
@@ -212,7 +211,7 @@ void muoviPedina(Colonna *scacchiera, int ROWS, Mossa mossa) {
                                                                       mossa.posizioneFinale.riga, colonnaPedinaInt,
                                                                       colonnaFinaleInt, ROWS)].altezza;
 
-        /*gestisco la colonna che conquista (se l'altezza della pedina è 3 allora shiftA non riuscirà ad effettuare lo spostamento e ritornerà 0 saltando il blocco)*/
+        /*gestisco la colonna che conquista (se l'altezza della pedina è 3 allora shiftA non riuscirà ad effettuare lo spostamento e ritornerà 0 saltando così il blocco)*/
         if (ShiftA(scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine,
                    altezzaPedinaDaMuovere,
                    0,
@@ -233,7 +232,7 @@ void muoviPedina(Colonna *scacchiera, int ROWS, Mossa mossa) {
                                                   colonnaFinaleInt, ROWS)].pedine[altezzaPedinaDaConquistare - 1]);
         }
 
-        /*gestisco la colonna che viene conquistatarimuovendo la pedina più alya della colonna*/
+        /*gestisco la colonna che viene conquistata rimuovendo la pedina più alya della colonna*/
         scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga, colonnaPedinaInt,
                                          colonnaFinaleInt, ROWS)].pedine[altezzaPedinaDaConquistare - 1] = NULL;
 
@@ -266,11 +265,11 @@ enum colore switchTurno(enum colore turnoCorrente) {
         return BIANCO;
 }
 
-inline int atPosition(int row, int col, int width) {
+int atPosition(int row, int col, int width) {
     return row * width + col;
 }
 
-inline int atItermediatePosition(int initialRow, int finalRow, int initialCol, int finalCol, int width) {
+int atItermediatePosition(int initialRow, int finalRow, int initialCol, int finalCol, int width) {
     return ((initialRow + finalRow) / 2) * width + ((initialCol + finalCol) / 2);
 }
 
