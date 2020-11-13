@@ -1,5 +1,7 @@
 /*lunghezza del lato della scacchiera*/
-#define LATO_SCACCHIERA (7) 
+#define LATO_SCACCHIERA (7)
+
+typedef int bool;
 
 /*enum che definisce di che colore possono essere le pedine*/
 enum colore {
@@ -32,12 +34,29 @@ typedef struct Mossa {
     Posizione posizioneFinale;
 } Mossa;
 
+/*Struct per gestione array dinamici di mosse*/
+typedef struct VettoreDinamicoMosse {
+    /* data */
+    Mossa *mosse;
+    int size; /*dimensione logica, celle effettivamente utilizzate*/
+    int capacity;/*dimensione fisica, la massima dimensione utilizzabile*/
+} VettoreDinamicoMosse;
+
 /*struttura che definisce lo stato della partita indicandone il colore del turno corrente, la matrice rappresentante la scacchiera e una variabile che indica se la partita è finita o no*/
 typedef struct Partita {
     enum colore turnoCorrente;
     Colonna scacchiera[LATO_SCACCHIERA][LATO_SCACCHIERA];
     int isEnded;
 } Partita;
+
+/*funzione inizializzazione vettore dinamico*/
+bool initVet(VettoreDinamicoMosse *vet);
+
+/*funzione per inserire un elemento in coda all'array dinamico*/
+bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa);
+
+/*funzione che libera la memoria allocata per un vettore dinamico*/
+void freeVet(VettoreDinamicoMosse vet);
 
 /*funzione che passata la matrice rappresentante la scacchiera ne inizializza gli elementi a inizio gioco
  * la funzione allocherà le pedine della scacchiera tramite malloc, perciò bisognerà liberare la memoria con la funzione freePedine
@@ -53,6 +72,10 @@ enum colore isWin();
 
 /*funzione che controlla se la mossa indicata dall'utente è valida, ritorna 1 se la mossa è valida, altrimenti 0*/
 int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum colore turnoCorrente);
+
+/*funzione che restituisce tutte le mosse possibili che può effettuare una pedina, ritorna un vettore dinamico quindi andrà deallocato con la funzione freeVet()*/
+VettoreDinamicoMosse
+trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int COLS, enum colore turnoCorrente);
 
 /*funzione che muove la pedina indicata dalle coordinate iniziali alle coordinate finali e conquista se la mossa lo richiede*/
 /*la funzione non effettua controlli sulla validità della mossa, per fare ciò utilizzare "controlloMossa"*/
@@ -74,3 +97,6 @@ void freePedine(Colonna *scacchiera, int ROWS, int COLS);
 /*p: posizione da liberare; n: dimensione logica (celle effettivamente occupate)
 v_size: dimensione fisica del vettore*/
 int ShiftA(Pedina **v, int n, int p, int v_size);
+
+/*funzione per stampare una mossa*/
+void stampaMossa(Mossa mossa);
