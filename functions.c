@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "prototipi.h"
 
-int init_game(Colonna *scacchiera, int ROWS, int COLS) {
+bool init_game(Colonna *scacchiera, int ROWS, int COLS) {
     /*variabili utilizzate per ciclare la matrice di Pedine*/
     int r, c;
 
@@ -58,6 +59,7 @@ int init_game(Colonna *scacchiera, int ROWS, int COLS) {
 void draw(Colonna *scacchiera, int lato) {
     /*variabili utilizzate per ciclare i vari for*/
     int rig, col, i, k, t;
+    char pedina;
 
     /*scorro le righe della scacchiera da 0 a lato - 1*/
     for (rig = 0; rig < lato + 1; rig++) {
@@ -89,15 +91,23 @@ void draw(Colonna *scacchiera, int lato) {
 
                             /*se la pedina nella casella in cui mi trovo ha altezza -1 significa che è nulla e non la rappresento, altrimenti si*/
                             if (scacchiera[atPosition(rig, k, lato)].altezza == 0)
-                                printf("    //    ");
+                                printf("          ");
                             else {
                                 printf("    ");
 
                                 /*Scorro la torre*/
                                 for (t = 0; t < 3; t++) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[t] != NULL)
-                                        printf("%c", scacchiera[atPosition(rig, k, lato)].pedine[t]->colore);
-                                    else
+                                    if (scacchiera[atPosition(rig, k, lato)].pedine[t] != NULL) {
+                                        if (scacchiera[atPosition(rig, k, lato)].pedine[t]->isPromossa) {
+                                            if (scacchiera[atPosition(rig, k, lato)].pedine[t]->colore == BIANCO)
+                                                pedina = 'B';
+                                            else
+                                                pedina = 'N';
+                                        } else
+                                            pedina = scacchiera[atPosition(rig, k, lato)].pedine[t]->colore;
+
+                                        printf("%c", pedina);
+                                    } else
                                         printf(" ");
                                 }
 
@@ -118,7 +128,7 @@ void draw(Colonna *scacchiera, int lato) {
 
 }
 
-int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum colore turnoCorrente) {
+bool controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum colore turnoCorrente) {
     /*converto le coodrdinate alfabetiche in intere*/
     int colonnaPedinaInt = mossa.posizionePedina.colonna - 97;
     int colonnaFinaleInt = mossa.posizioneFinale.colonna - 97;
@@ -131,20 +141,20 @@ int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum co
      * (riga + 1)*/
     int direzioneColore;
 
+    /*controllo che le coordinate delle colonne siano valide*/
+    if (colonnaFinaleInt < 0 || colonnaFinaleInt > COLS - 1 || colonnaPedinaInt < 0 || colonnaPedinaInt > COLS - 1)
+        return 0;
+
+    /*controllo che le coordinate delle righe siano valide*/
+    if (mossa.posizioneFinale.riga < 1 || mossa.posizioneFinale.riga > ROWS || mossa.posizionePedina.riga < 1 ||
+        mossa.posizionePedina.riga > ROWS)
+        return 0;
+
     /*inverto la coordinata della riga per poter accedere correttamente alla matrice*/
     mossa.posizionePedina.riga = abs(mossa.posizionePedina.riga - ROWS);
     mossa.posizioneFinale.riga = abs(mossa.posizioneFinale.riga - ROWS);
 
     altezzaPedina = scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza;
-
-    /*controllo che le coordinate delle colonne siano valide*/
-    if (colonnaFinaleInt < 0 || colonnaFinaleInt > ROWS - 1 || colonnaPedinaInt < 0 || colonnaPedinaInt > ROWS - 1)
-        return 0;
-
-    /*controllo che le coordinate delle righe siano valide*/
-    if (mossa.posizioneFinale.riga < 0 || mossa.posizioneFinale.riga > COLS - 1 || mossa.posizionePedina.riga < 0 ||
-        mossa.posizionePedina.riga > COLS - 1)
-        return 0;
 
     /*controllo se la pedina che l'utente vuole muovere è del proprio colore o non è una casella vuota*/
     if (altezzaPedina == 0 ||
@@ -180,8 +190,9 @@ int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum co
              scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga,
                                               colonnaPedinaInt, colonnaFinaleInt, ROWS)].altezza != 0 &&
              scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga,
-                                              colonnaPedinaInt, colonnaFinaleInt, ROWS)].pedine[altezzaPedina -
-                                                                                                1]->colore !=
+                                              colonnaPedinaInt, colonnaFinaleInt, ROWS)].pedine[
+                     scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga,
+                                                      colonnaPedinaInt, colonnaFinaleInt, ROWS)].altezza - 1]->colore !=
              turnoCorrente) {
         return 1;
     } else
@@ -190,20 +201,26 @@ int controlloMossa(Colonna *scacchiera, int ROWS, int COLS, Mossa mossa, enum co
 
 VettoreDinamicoMosse trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int COLS, enum colore turnoCorrente) {
 
+    /*variabili usate per ciclare la scacchiera*/
     int i, j;
 
+    /*vettori dinamici usati per memorizzare le mosse*/
     VettoreDinamicoMosse mosseValide, mosseValideConquista;
 
+    /*variabili usate per memorizzare l'altezza della pedina e la direzione in base al colore*/
     int altezzaColonna;
     int direzioneColore;
 
+    /*variabile usata per salvare la mossa da testare*/
     Mossa mossa;
 
-    if (!initVet(&mosseValide) || !initVet(&mosseValideConquista)) {
-        /*altrimenti verrà poi gestito l'errore*/
+    /*inizializzo i vettori*/
+    if (!initVet(&mosseValide, 10) || !initVet(&mosseValideConquista, 10)) {
+        /*TODO gestire l'errore*/
         exit(EXIT_FAILURE);
     }
 
+    /*setto la direzione*/
     if (turnoCorrente == BIANCO)
         direzioneColore = 1;
     else
@@ -225,17 +242,16 @@ VettoreDinamicoMosse trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int CO
             /*controllo che il colore della pedina sia corretto*/
             if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->colore == turnoCorrente) {
                 mossa.posizionePedina.riga = ROWS - i;
-                mossa.posizionePedina.colonna = j + 97;
+                mossa.posizionePedina.colonna = (char) (j + 97);
 
                 /*controllo prima se ci sono mosse di conquista valide (regola obbligo di mangiare)*/
                 mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (2 * direzioneColore);
-                mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna + 2;
+                mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 2);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     pushBack(&mosseValideConquista, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
 
-                mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (2 * direzioneColore);
-                mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna - 2;
+                mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     pushBack(&mosseValideConquista, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
@@ -243,15 +259,14 @@ VettoreDinamicoMosse trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int CO
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
                 if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->isPromossa) {
                     mossa.posizioneFinale.riga = mossa.posizionePedina.riga - (2 * direzioneColore);
-                    mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna + 2;
+                    mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 2);
 
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         pushBack(&mosseValideConquista,
                                  mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
 
-                    mossa.posizioneFinale.riga = mossa.posizionePedina.riga - (2 * direzioneColore);
-                    mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna - 2;
+                    mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         pushBack(&mosseValideConquista,
@@ -263,13 +278,12 @@ VettoreDinamicoMosse trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int CO
 
                 /*controllo se ci sono mosse di spostamento valide per la pedina*/
                 mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (1 * direzioneColore);
-                mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna + 1;
+                mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 1);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     pushBack(&mosseValide, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
 
-                mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (1 * direzioneColore);
-                mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna - 1;
+                mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     pushBack(&mosseValide, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
@@ -277,33 +291,31 @@ VettoreDinamicoMosse trovaMosseDisponibili(Colonna *scacchiera, int ROWS, int CO
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
                 if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->isPromossa) {
                     mossa.posizioneFinale.riga = mossa.posizionePedina.riga - (1 * direzioneColore);
-                    mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna + 1;
+                    mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 1);
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         pushBack(&mosseValide, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
 
-                    mossa.posizioneFinale.riga = mossa.posizionePedina.riga - (1 * direzioneColore);
-                    mossa.posizioneFinale.colonna = mossa.posizionePedina.colonna - 1;
+                    mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         pushBack(&mosseValide, mossa);/*inserisce nel vettore delle mosse, se è una mossa valida*/
                 }
-
             }
         }
     }
 
     /*ritorno il vettore corretto e libero quello che non verrà ritornato*/
     if (mosseValideConquista.size > 0) {
-        freeVet(mosseValide);
+        freeVet(&mosseValide);
         return mosseValideConquista;
     }
 
-    freeVet(mosseValideConquista);
+    freeVet(&mosseValideConquista);
     return mosseValide;
 }
 
-void muoviPedina(Colonna *scacchiera, int ROWS, Mossa mossa) {
+void muoviPedina(Colonna *scacchiera, int COLS, Mossa mossa) {
     /*variabile usata per cicli for*/
     int i;
 
@@ -315,64 +327,92 @@ void muoviPedina(Colonna *scacchiera, int ROWS, Mossa mossa) {
     int colonnaFinaleInt = mossa.posizioneFinale.colonna - 97;
 
     /*inverto la coordinata della riga per poter accedere correttamente alla matrice*/
-    mossa.posizionePedina.riga = abs(mossa.posizionePedina.riga - ROWS);
-    mossa.posizioneFinale.riga = abs(mossa.posizioneFinale.riga - ROWS);
+    mossa.posizionePedina.riga = abs(mossa.posizionePedina.riga - COLS);
+    mossa.posizioneFinale.riga = abs(mossa.posizioneFinale.riga - COLS);
 
     /*controllo se la mossa è di conquista*/
     if ((colonnaFinaleInt == colonnaPedinaInt + 2 || colonnaFinaleInt == colonnaPedinaInt - 2) &&
         (mossa.posizioneFinale.riga == mossa.posizionePedina.riga - 2 ||
          mossa.posizioneFinale.riga == mossa.posizionePedina.riga + 2)) {
 
-        altezzaPedinaDaMuovere = scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza;
+        altezzaPedinaDaMuovere = scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
         altezzaPedinaDaConquistare = scacchiera[atItermediatePosition(mossa.posizionePedina.riga,
                                                                       mossa.posizioneFinale.riga, colonnaPedinaInt,
-                                                                      colonnaFinaleInt, ROWS)].altezza;
+                                                                      colonnaFinaleInt, COLS)].altezza;
 
         /*gestisco la colonna che conquista (se l'altezza della pedina è 3 allora shiftA non riuscirà ad effettuare lo spostamento e ritornerà 0 saltando così il blocco)*/
-        if (ShiftA(scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine,
+        if (ShiftA(scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine,
                    altezzaPedinaDaMuovere,
                    0,
                    3)) {
 
-            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine[0] =
+            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[0] =
                     scacchiera[atItermediatePosition(mossa.posizionePedina.riga,
                                                      mossa.posizioneFinale.riga,
                                                      colonnaPedinaInt,
-                                                     colonnaFinaleInt, ROWS)].pedine[altezzaPedinaDaConquistare - 1];
+                                                     colonnaFinaleInt, COLS)].pedine[altezzaPedinaDaConquistare - 1];
 
-            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza++;
+            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza++;
         } else {
             /*se la colonna che sta conquistando è gia alta tre allora la pedina più alta della colonna conquistata verrà semplicemente rimossa dal gioco*/
             free(scacchiera[atItermediatePosition(mossa.posizionePedina.riga,
                                                   mossa.posizioneFinale.riga,
                                                   colonnaPedinaInt,
-                                                  colonnaFinaleInt, ROWS)].pedine[altezzaPedinaDaConquistare - 1]);
+                                                  colonnaFinaleInt, COLS)].pedine[altezzaPedinaDaConquistare - 1]);
         }
 
         /*gestisco la colonna che viene conquistata rimuovendo la pedina più alya della colonna*/
         scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga, colonnaPedinaInt,
-                                         colonnaFinaleInt, ROWS)].pedine[altezzaPedinaDaConquistare - 1] = NULL;
+                                         colonnaFinaleInt, COLS)].pedine[altezzaPedinaDaConquistare - 1] = NULL;
 
         scacchiera[atItermediatePosition(mossa.posizionePedina.riga, mossa.posizioneFinale.riga, colonnaPedinaInt,
-                                         colonnaFinaleInt, ROWS)].altezza--;
+                                         colonnaFinaleInt, COLS)].altezza--;
     }
 
     /*sposto la pedina e le sue configurazioni nella nuova casella*/
-    for (i = 0; i < scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza; i++) {
+    for (i = 0; i < scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza; i++) {
         scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt,
-                              ROWS)].pedine[i] = scacchiera[atPosition(
-                mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine[i];
+                              COLS)].pedine[i] = scacchiera[atPosition(
+                mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i];
 
         /*Setto il vecchio array pedine a null*/
-        scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].pedine[i] = NULL;
+        scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i] = NULL;
     }
 
     /*setto la nuova altezza della colonna di destinazione*/
-    scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, ROWS)].altezza = scacchiera[atPosition(
-            mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza;
+    scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].altezza = scacchiera[atPosition(
+            mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
 
     /*rendo la vecchia posizione della pedina nulla*/
-    scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, ROWS)].altezza = 0;
+    scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza = 0;
+}
+
+void controlloPromozione(Colonna *scacchiera, int ROWS, int COLS) {
+    int i;
+    int altezzaPedina;
+
+    /*controllo se ci sono pedine nere in riga 0*/
+    for (i = 0; i < COLS; i += 2) {
+        altezzaPedina = scacchiera[atPosition(0, i, COLS)].altezza;
+
+        if (altezzaPedina == 0)
+            continue;
+
+        if (scacchiera[atPosition(0, i, COLS)].pedine[altezzaPedina - 1]->colore == BIANCO)
+            scacchiera[atPosition(0, i, COLS)].pedine[altezzaPedina - 1]->isPromossa = 1;
+    }
+
+    /*controllo se ci sono pedine bianche nell'ultima riga*/
+    for (i = 0; i < COLS; i += 2) {
+        altezzaPedina = scacchiera[atPosition(ROWS - 1, i, COLS)].altezza;
+
+        if (altezzaPedina == 0)
+            continue;
+
+        if (scacchiera[atPosition(ROWS - 1, i, COLS)].pedine[altezzaPedina - 1]->colore == NERO)
+            scacchiera[atPosition(ROWS - 1, i, COLS)].pedine[altezzaPedina - 1]->isPromossa = 1;
+    }
+
 }
 
 enum colore switchTurno(enum colore turnoCorrente) {
@@ -402,7 +442,7 @@ void freePedine(Colonna *scacchiera, int ROWS, int COLS) {
     }
 }
 
-int ShiftA(Pedina **v, int n, int p, int v_size) {
+bool ShiftA(Pedina **v, int n, int p, int v_size) {
     int i;
     if (n < v_size) {
         for (i = n; i > p; i--)
@@ -413,13 +453,14 @@ int ShiftA(Pedina **v, int n, int p, int v_size) {
         return 0;
 }
 
-bool initVet(VettoreDinamicoMosse *vet) {
-    vet->size = 0;
-    vet->capacity = 10;
+bool initVet(VettoreDinamicoMosse *vet, int capacity) {
     vet->mosse = (Mossa *) malloc(vet->capacity * sizeof(Mossa));
 
     if (vet->mosse == NULL)
         return 0;
+
+    vet->size = 0;
+    vet->capacity = capacity;
 
     return 1;
 }
@@ -427,7 +468,7 @@ bool initVet(VettoreDinamicoMosse *vet) {
 bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa) {
     if (vet->size == vet->capacity) {
         /*extend vector*/
-        Mossa *new_data = (Mossa *) realloc(vet->mosse, vet->capacity * 2);
+        Mossa *new_data = (Mossa *) realloc(vet->mosse, vet->capacity * 2 * sizeof(Mossa));
         if (!new_data) {
             free(vet->mosse);
             return 0;
@@ -442,11 +483,28 @@ bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa) {
     return 1;
 }
 
-void freeVet(VettoreDinamicoMosse vet) {
-    free(vet.mosse);
+void freeVet(VettoreDinamicoMosse *vet) {
+    free(vet->mosse);
+    vet->mosse = NULL;
+    vet->size = vet->capacity = 0;
 }
 
 void stampaMossa(Mossa mossa) {
     printf("%c%d - %c%d", mossa.posizionePedina.colonna, mossa.posizionePedina.riga, mossa.posizioneFinale.colonna,
            mossa.posizioneFinale.riga);
+}
+
+bool inputInt(int *var) {
+    char *ptr;
+    char str[INPUT_SIZE];
+
+    fgets(str, INPUT_SIZE, stdin);
+    *var = (int) strtol(str, &ptr, 10);
+
+    if (*var == INT_MAX || *var == INT_MIN)
+        return 0;
+    else if (*var)
+        return 1;
+
+    return 0;
 }
