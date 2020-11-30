@@ -1,6 +1,14 @@
+/** @file main.c
+ *  @brief main file
+ *
+ *  Implementa il gioco mini laska attraverso le funzioni definite su mini_laska.h
+ */
 #include <stdio.h>
-#include"prototipi.h"
+#include "mini_laska.h"
 
+/**
+ * main del programma dove viene gestito il gioco tramite l'utilizzo di strutture e funzioni (vedere file mini_laska.h)
+ * */
 int main() {
     /*variabile per ciclo for*/
     int i;
@@ -53,6 +61,12 @@ int main() {
             /*ottengo le mosse disponibili*/
             mosseDisponibili = trovaMosseDisponibili(&(partita.scacchiera[0][0]), LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
 
+            /*controllo se la partita è conclusa*/
+            if (mosseDisponibili.size == 0) {
+                partita.isEnded = 1;
+                break;
+            }
+
             printf("Mosse disponibili:\n");
             for (i = 0; i < mosseDisponibili.size; ++i) {
                 printf("%d) ", i + 1);
@@ -85,13 +99,18 @@ int main() {
         }
     }
 
+    /* stampo il vincitore della partita */
+    if (partita.isEnded && partita.turnoCorrente == BIANCO){
+        printf("Il giocatore Nero ha vinto!!\n");
+    } else if (partita.isEnded && partita.turnoCorrente == NERO) {
+        printf("Il giocatore Bianco ha vinto!!\n");
+    }
+
     /*Libero la memoria allocata*/
     freePedine(&(partita.scacchiera[0][0]), LATO_SCACCHIERA, LATO_SCACCHIERA);
 
     /*svuoto il vettore dinamico delle mosse*/
     freeVet(&partita.mossePartita);
-
-    /* system("clear"); -per pulire il terminale ogni turno */
 
     return 0;
 }
