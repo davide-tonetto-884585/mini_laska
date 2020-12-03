@@ -1,25 +1,25 @@
 #include <stdlib.h>
 #include "dynamic_vet.h"
 
-bool initVet(VettoreDinamicoMosse *vet, size_t capacity) {
-    vet->mosse = (Mossa *) malloc(capacity * sizeof(Mossa));
+bool_t initVet(vettore_dinamico_mossa_t *vet, size_t capacity) {
+    vet->mosse = (mossa_t *) malloc(capacity * sizeof(mossa_t));
 
     if (vet->mosse == NULL)
-        return 0;
+        return FALSE;
 
     vet->size = 0;
     vet->capacity = capacity;
 
-    return 1;
+    return TRUE;
 }
 
-bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa) {
+bool_t pushBack(vettore_dinamico_mossa_t *vet, mossa_t mossa) {
     if (vet->size == vet->capacity) {
         /*extend vector*/
-        Mossa *new_data = (Mossa *) realloc(vet->mosse, vet->capacity * 2 * sizeof(Mossa));
+        mossa_t *new_data = (mossa_t *) realloc(vet->mosse, vet->capacity * 2 * sizeof(mossa));
         if (!new_data) {
             free(vet->mosse);
-            return 0;
+            return FALSE;
         }
         vet->mosse = new_data;
         vet->capacity *= 2;
@@ -28,10 +28,10 @@ bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa) {
     vet->mosse[vet->size] = mossa;
     vet->size++;
 
-    return 1;
+    return TRUE;
 }
 
-void freeVet(VettoreDinamicoMosse *vet) {
+void freeVet(vettore_dinamico_mossa_t *vet) {
     free(vet->mosse);
     vet->mosse = NULL;
     vet->size = vet->capacity = 0;

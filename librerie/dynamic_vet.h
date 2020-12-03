@@ -1,25 +1,32 @@
 /** @file dynamic_vet.h
- *  @brief Prototipi delle funzioni per la gestione dei vettori dinamici di Mossa
+ *  @brief Prototipi delle funzioni per la gestione dei vettori dinamici di mossa
  *
  *  Contiene i protoptipi delle funzioni che gestiscono
- *  il vettori dinamici di Mossa
+ *  il vettori dinamici di mossa
  */
 
 
 #ifndef MINI_LASKA_DYNAMIC_VET_H
 #define MINI_LASKA_DYNAMIC_VET_H
 
-typedef int bool; /**< typedef che definisce l'alias "bool" per gli int 0 e 1 */
+/**
+ * @brief enum che implementa il tipo bool
+ *
+ * tramite questo enum si vuole implementare il tipo bool che assegna 0 a FALSE e 1 a TRUE
+ */
+enum bool {FALSE, TRUE};
+typedef enum bool bool_t;
 
 /**
  * @brief struttura che definisce una posizione sulla scacchiera
  *
- * struttura che mappa una posizione sulla scacchiera indicandone la riga (int) e la colonna (char)
+ * struttura che mappa una posizione sulla scacchiera indicandone la riga (int) e la cella (char)
  */
-typedef struct Posizione {
+struct posizione {
     int riga;
     char colonna;
-} Posizione;
+};
+typedef struct posizione posizione_t;
 
 /**
  * @brief struttura che definisce le coordinate di una mossa
@@ -27,19 +34,21 @@ typedef struct Posizione {
  * struttura che definisce due posizioni per mappare una mossa dei giocatori
  * (posizione della pedina e posizione in cui si vuole spostare la data pedina)
  */
-typedef struct Mossa {
-    Posizione posizionePedina;
-    Posizione posizioneFinale;
-} Mossa;
+struct mossa {
+    posizione_t posizionePedina;
+    posizione_t posizioneFinale;
+};
+typedef struct mossa mossa_t;
 
 /**
  * @brief Struct per gestione array dinamici di Massa
  * */
-typedef struct VettoreDinamicoMosse {
-    Mossa *mosse; /**< data */
+struct vettore_dinamico_mossa {
+    mossa_t *mosse; /**< data */
     size_t size; /**< dimensione logica, celle effettivamente utilizzate */
     size_t capacity;/**< dimensione fisica, la massima dimensione utilizzabile */
-} VettoreDinamicoMosse;
+};
+typedef struct vettore_dinamico_mossa vettore_dinamico_mossa_t;
 
 /**
  * @brief funzione inizializzazione vettore dinamico
@@ -52,17 +61,17 @@ typedef struct VettoreDinamicoMosse {
  *
  * @return bool - 1 se è andato a buon fine, 0 altrimenti
  */
-bool initVet(VettoreDinamicoMosse *vet, size_t capacity);
+bool_t initVet(vettore_dinamico_mossa_t *vet, size_t capacity);
 
 /**
  * @brief funzione che inserisce un elemento in coda all'array dinamico
  *
- * @param vet - vettore dinamico a cui inserire la Mossa
- * @param mossa - Mossa da inserire
+ * @param vet - vettore dinamico a cui inserire la mossa
+ * @param mossa - mossa da inserire
  *
  * @return bool - 1 se è andato a buon fine, 0 altrimenti
  */
-bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa);
+bool_t pushBack(vettore_dinamico_mossa_t *vet, mossa_t mossa);
 
 /**
  * @brief funzione che libera la memoria allocata per un vettore dinamico
@@ -71,6 +80,6 @@ bool pushBack(VettoreDinamicoMosse *vet, Mossa mossa);
  *
  * @return void
  */
-void freeVet(VettoreDinamicoMosse *vet);
+void freeVet(vettore_dinamico_mossa_t *vet);
 
-#endif //MINI_LASKA_DYNAMIC_VET_H
+#endif /*MINI_LASKA_DYNAMIC_VET_H*/

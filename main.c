@@ -20,16 +20,16 @@ int main() {
     int isMossaValida;
 
     /*vettore dinamico mosse*/
-    VettoreDinamicoMosse mosseDisponibili;
+    vettore_dinamico_mossa_t mosseDisponibili;
 
     /*inizializzo la partita*/
-    Partita partita;
+    partita_t partita;
 
     /*inizializzo il turno iniziale al BIANCO*/
     partita.turnoCorrente = BIANCO;
 
     /*inizializzo isEnded a 0 cosi da indicare che la partita non è finita*/
-    partita.isEnded = 0;
+    partita.isEnded = FALSE;
 
     /*inizializzo il vettore dinamico che terrà tutte le mosse effettuate durante la partita*/
     if (!initVet(&partita.mossePartita, 10)){
@@ -50,8 +50,8 @@ int main() {
         printf("\n");
         draw(&(partita.scacchiera[0][0]), LATO_SCACCHIERA);
 
-        /*risetto la variabile isMossaValida a zero per poter entrare nel ciclo che richiede la mossa*/
-        isMossaValida = 0;
+        /*risetto la variabile isMossaValida a FALSE per poter entrare nel ciclo che richiede la mossa*/
+        isMossaValida = FALSE;
 
         /*finchè l'utente non seleziona una mossa valida richiedo il numero mossa*/
         while (!isMossaValida) {
@@ -63,7 +63,7 @@ int main() {
 
             /*controllo se la partita è conclusa*/
             if (mosseDisponibili.size == 0) {
-                partita.isEnded = 1;
+                partita.isEnded = TRUE;
                 break;
             }
 
@@ -93,7 +93,7 @@ int main() {
                 partita.turnoCorrente = switchTurno(partita.turnoCorrente);
 
                 /*indico che la mossa è andata a buon fine*/
-                isMossaValida = 1;
+                isMossaValida = TRUE;
             } else
                 printf("\nMossa non valida! Inserire nuovamente una mossa valida.\n");
         }
