@@ -5,7 +5,8 @@
  *  il gioco mini laska
  */
 
-#include "librerie/dynamic_vet.h"
+/* #include "librerie/dynamic_vet.h" */
+#include "librerie/generic_dynamic_vet/dynarr.h"
 
 #define LATO_SCACCHIERA (7) /**< Costante che definisce la lunghezza di ciascun lato della scacchiera */
 
@@ -47,6 +48,48 @@ struct cella {
 typedef struct cella cella_t;
 
 /**
+ * @brief struttura che definisce una posizione sulla scacchiera
+ *
+ * struttura che mappa una posizione sulla scacchiera indicandone la riga (int) e la cella (char)
+ */
+struct posizione {
+    int riga;
+    char colonna;
+};
+typedef struct posizione posizione_t;
+
+/**
+ * @brief struttura che definisce le coordinate di una mossa
+ *
+ * struttura che definisce due posizioni per mappare una mossa dei giocatori
+ * (posizione della pedina e posizione in cui si vuole spostare la data pedina)
+ */
+struct mossa {
+    posizione_t posizionePedina;
+    posizione_t posizioneFinale;
+};
+typedef struct mossa mossa_t;
+
+/* creo un vettore dinamico di tipo struct mossa */
+DYN_ARR_CREATE(mossa_t);
+
+/**
+ * @brief struct utilizzato per salvare una mossa effettuata in dettaglio
+ *
+ * codesto struct permette di salvare oltre alla mossa effettuata le eventuali pedine eliminate durante una conquista
+ * cosi da non perdere traccia di quest'ultime. Ciò ci è necessario per annullare una mossa.
+ */
+ struct mossa_dettagliata {
+     mossa_t mossa;
+     pedina_t *pedinaEliminata; /**< puntatore che tiene traccia di una pedina eventualmente eliminata durante la mossa */
+     bool_t hasBeenPromoted; /**< variabile booleana che, se a TRUE, indica che una pedina è stata promossa durante la mossa */
+ };
+typedef struct mossa_dettagliata mossa_dettagliata_t;
+
+ /* creo un vettore dinamico di tipo struct mossa_dettagliata */
+ DYN_ARR_CREATE(mossa_dettagliata_t);
+
+/**
  * @brief struttura che definisce lo stato della partita
  *
  * scopo della seguente struct è quello di rappresentare lo stato di una partita a mini laska, quindi memorizzandone
@@ -55,9 +98,9 @@ typedef struct cella cella_t;
  */
 struct partita {
     enum colore turnoCorrente;
-    cella_t scacchiera[LATO_SCACCHIERA][LATO_SCACCHIERA]; /**< matrice di struct cella che rappresenta la scacchiera */
+    cella_t scacchiera[LATO_SCACCHIERA * LATO_SCACCHIERA]; /**< matrice di struct cella che rappresenta la scacchiera */
     bool_t isEnded; /**< variabile booleana che definisce se la partita è conclusa (true) o non è conclusa (false) */
-    vettore_dinamico_mossa_t mossePartita;
+    dyn_arr_mossa_dettagliata_t mosseDettagliatePartita;
 };
 typedef struct partita partita_t;
 
@@ -66,7 +109,7 @@ typedef struct partita partita_t;
  *
  * funzione che passata la matrice rappresentante la scacchiera ne inizializza gli elementi a inizio gioco,
  * la funzione allocherà le pedine della scacchiera tramite malloc, perciò bisognerà liberare la memoria con
- * la funzione freePedine a fine partita
+ * la funzione freePartita a fine partita
  *
  * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
  * @param ROWS - numero di righe della scacchiera
@@ -88,19 +131,6 @@ bool_t init_game(cella_t *scacchiera, size_t ROWS, size_t COLS);
  * @return void
  */
 void draw(cella_t *scacchiera, size_t lato);
-
-/**
- * @brief funzione che controlla se ci sono pedine da promuovere e, in caso, le promuove
- *
- * funzione che passata la matrice controlla se ci sono pedine a fondo scacchiera del colore opposto a quello di
- * partenza e, in caso, le promuove cambiando lo stato di pedina.isPromossa a true
- *
- * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
- * @param lato - lunghezza di ciascun lato della scacchiera
- *
- * @return void
- */
-void controlloPromozione(cella_t *scacchiera, size_t ROWS, size_t COLS);
 
 /**
  * @brief funzione che controlla se la mossa passata è valida secondo le regole del gioco
@@ -132,24 +162,30 @@ bool_t controlloMossa(cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mos
  *
  * @return vettore_dinamico_mossa - vettore dinamico di struct mossa (andrà deallocato)
  */
-vettore_dinamico_mossa_t
-trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente);
+dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente);
 
 /**
- * @brief funzione che muove la pedina indicata dalle coordinate iniziali alle coordinate finali e conquista se
- * la mossa lo richiede la funzione non effettua controlli sulla validità della mossa, per fare ciò utilizzare
- * la funzione controlloMossa
- *
- * funzione che restituisce tutte le mosse disponibili che può effettuare un determinato giocatore dando priorità
- * a quelle di conquista secondo le regole del mini laska, utilizzare freeVet per deallocare il vettore restituito
+ * funzione che muove la pedina indicata dalle coordinate iniziali alle coordinate finali, conquista se
+ * la mossa lo richiede ed effettua la promozione in caso di necessità,
+ * la funzione non effettua controlli sulla validità della mossa, per fare ciò utilizzare la funzione controlloMossa
  *
  * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
  * @param COLS - numero di colonne della scacchiera
  * @param mossa - struttura mossa che contiene la posizione iniziale e finale della mossa da effettuare
  *
- * @return vettore_dinamico_mossa - vettore dinamico di struct mossa (andrà deallocato)
+ * @return mossa_dettagliata - resoconto della mossa
  */
-void muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa);
+mossa_dettagliata_t muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa);
+
+/**
+ * funzione che passata la partita permette di annullare l'ultima mossa effettuata
+ *
+ * @param partita - partita di cui si vuole annullare l'ultima mossa
+ * @param COLS - numero colonne della scacchiera
+ *
+ * @return bool_t - FALSE se durante la partita non si sono ancora effettuate mosse
+ */
+bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
 
 /**
  * @brief funzione che passato il turno attuale lo cambia
@@ -193,10 +229,9 @@ size_t atItermediatePosition(mossa_t mossaConquista, size_t width);
 
 /**
  * @brief funzione che si occupa di liberare la memoria allocata tramite malloc per le pedine della
- * scacchiera che si trovano ancora in gioco a fine partita
+ * scacchiera e per il vettore delle mosse
  *
- * funzione che passata la scacchiera della partita libera tramite free() le pedine ancora rimaste in partita che
- * erano state allocate tramite la malloc
+ * funzione che passata la scacchiera della partita libera tramite free() le pedine e il vettore dinamico delle mosse
  *
  * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
  * @param COLS - numero di colonne della scacchiera
@@ -204,7 +239,7 @@ size_t atItermediatePosition(mossa_t mossaConquista, size_t width);
  *
  * @return void
  */
-void freePedine(cella_t *scacchiera, size_t ROWS, size_t COLS);
+void freePartita(partita_t partita, size_t ROWS, size_t COLS);
 
 /**
  * @brief funzione che shifta gli elementi di un array di puntatori a pedina
@@ -218,7 +253,7 @@ void freePedine(cella_t *scacchiera, size_t ROWS, size_t COLS);
  *
  * @return bool - 1 se l'operazione è andtata a buon fine, 0 altrimenti
  */
-bool_t ShiftA(pedina_t **v, int n, int p, int v_size);
+bool_t ShiftADX(pedina_t **v, int n, int p, int v_size);
 
 /**
  * @brief funzione che stampa a terminale una mossa
