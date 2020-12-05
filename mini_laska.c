@@ -5,11 +5,19 @@
 
 #define INPUT_SIZE (20) /**< costante che definisce la grandezza del buffer di input */
 
-bool_t init_game(cella_t *scacchiera, size_t ROWS, size_t COLS) {
+int max(int a, int b) {
+    return a > b ? a : b;
+}
+
+int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS) {
     /*variabili utilizzate per ciclare la matrice di Pedine*/
     int r, c;
 
-    /*cicli che mi permettono di scorrere la matrice di Pedine*/
+    /*cicli che mi permettono di scorrere la matrice*/
     for (r = 0; r < ROWS; r++) {
 
         for (c = 0; c < COLS; c++) {
@@ -17,43 +25,47 @@ bool_t init_game(cella_t *scacchiera, size_t ROWS, size_t COLS) {
             /*if ((r + c) % 2 == 0) {*/
 
             if (r < ROWS / 2) {
-                scacchiera[atPosition(r, c, COLS)].pedine[0] = (pedina_t *) malloc(sizeof(pedina_t));
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0] = (pedina_t *) malloc(sizeof(pedina_t));
 
                 /*controllo che la malloc sia andata a buon fine*/
-                if (scacchiera[atPosition(r, c, COLS)].pedine[0] == NULL) {
+                if (partita->scacchiera[atPosition(r, c, COLS)].pedine[0] == NULL) {
                     return FALSE;
                 }
 
-                scacchiera[atPosition(r, c, COLS)].pedine[0]->colore = NERO;
-                scacchiera[atPosition(r, c, COLS)].pedine[0]->isPromossa = FALSE;
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0]->colore = NERO;
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0]->isPromossa = FALSE;
 
-                scacchiera[atPosition(r, c, COLS)].altezza = 1;
+                partita->scacchiera[atPosition(r, c, COLS)].altezza = 1;
             } else if (r > ROWS / 2) {
                 /*inizializzo le Pedine nelle ultime tre righe della matrice scacchiera e sulle caselle bianche della scacchiera di colore BIANCO*/
-                scacchiera[atPosition(r, c, COLS)].pedine[0] = (pedina_t *) malloc(sizeof(pedina_t));
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0] = (pedina_t *) malloc(sizeof(pedina_t));
 
                 /*controllo che la malloc sia andata a buon fine*/
-                if (scacchiera[atPosition(r, c, COLS)].pedine[0] == NULL) {
+                if (partita->scacchiera[atPosition(r, c, COLS)].pedine[0] == NULL) {
                     return FALSE;
                 }
 
-                scacchiera[atPosition(r, c, COLS)].pedine[0]->colore = BIANCO;
-                scacchiera[atPosition(r, c, COLS)].pedine[0]->isPromossa = FALSE;
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0]->colore = BIANCO;
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0]->isPromossa = FALSE;
 
-                scacchiera[atPosition(r, c, COLS)].altezza = 1;
+                partita->scacchiera[atPosition(r, c, COLS)].altezza = 1;
             } else {
                 /*delle rimanenti pedine ne inizializzo l'altezza a -1 per indicare che in quella posizione non si trova alcuna pedina*/
-                scacchiera[atPosition(r, c, COLS)].pedine[0] = NULL;
-                scacchiera[atPosition(r, c, COLS)].altezza = 0;
+                partita->scacchiera[atPosition(r, c, COLS)].pedine[0] = NULL;
+                partita->scacchiera[atPosition(r, c, COLS)].altezza = 0;
             }
 
             /*inizializzo le resyanti due pedine della cella a null*/
-            scacchiera[atPosition(r, c, COLS)].pedine[1] = NULL;
-            scacchiera[atPosition(r, c, COLS)].pedine[2] = NULL;
+            partita->scacchiera[atPosition(r, c, COLS)].pedine[1] = NULL;
+            partita->scacchiera[atPosition(r, c, COLS)].pedine[2] = NULL;
 
             /*}*/
         }
     }
+
+    partita->turnoCorrente = BIANCO;
+    partita->isEnded = FALSE;
+    DYN_ARR_INIT_DEFAULT(partita->mosseDettagliatePartita);
 
     return TRUE;
 }
@@ -317,7 +329,7 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
     return mosseValide;
 }
 
-mossa_dettagliata_t muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa) {
+mossa_dettagliata_t muoviPedina(partita_t *partita, size_t COLS, mossa_t mossa) {
     /*variabile usata per cicli for*/
     int i;
 
@@ -340,66 +352,75 @@ mossa_dettagliata_t muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa)
     mossa.posizionePedina.riga = abs(mossa.posizionePedina.riga - (int) COLS);
     mossa.posizioneFinale.riga = abs(mossa.posizioneFinale.riga - (int) COLS);
 
-    altezzaColonnaDaMuovere = scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
+    altezzaColonnaDaMuovere = partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
 
     /*controllo se la mossa è di conquista*/
     if ((colonnaFinaleInt == colonnaPedinaInt + 2 || colonnaFinaleInt == colonnaPedinaInt - 2) &&
         (mossa.posizioneFinale.riga == mossa.posizionePedina.riga - 2 ||
          mossa.posizioneFinale.riga == mossa.posizionePedina.riga + 2)) {
 
-        altezzaColonnaDaConquistare = scacchiera[atItermediatePosition(mossa, COLS)].altezza;
+        mossaDettagliata.hasConquered = TRUE;
+
+        altezzaColonnaDaConquistare = partita->scacchiera[atItermediatePosition(mossa, COLS)].altezza;
 
         /*gestisco la cella che conquista (se l'altezza della pedina è 3 allora shiftA non riuscirà ad effettuare lo spostamento e ritornerà 0 saltando così il blocco)*/
-        if (ShiftADX(scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine,
+        if (ShiftADX(partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine,
                      altezzaColonnaDaMuovere, 0, 3)) {
 
-            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[0] =
-                    scacchiera[atItermediatePosition(mossa, COLS)].pedine[altezzaColonnaDaConquistare - 1];
+            partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[0] =
+                    partita->scacchiera[atItermediatePosition(mossa, COLS)].pedine[altezzaColonnaDaConquistare - 1];
 
-            scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza++;
+            partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza++;
             altezzaColonnaDaMuovere++;
         } else {
             /*se la cella che sta conquistando è gia alta tre allora la pedina più alta della cella conquistata
              * verrà semplicemente rimossa dal gioco e salvata nel resoconto della mossa (ciò per permettere l'undo della mossa) */
             /*free(scacchiera[atItermediatePosition(mossa, COLS)].pedine[altezzaColonnaDaConquistare - 1]);*/
-            mossaDettagliata.pedinaEliminata = scacchiera[atItermediatePosition(mossa, COLS)].pedine[
+            mossaDettagliata.pedinaEliminata = partita->scacchiera[atItermediatePosition(mossa, COLS)].pedine[
                     altezzaColonnaDaConquistare - 1];
         }
 
         /*gestisco la cella che viene conquistata rimuovendo la pedina più alya della cella*/
-        scacchiera[atItermediatePosition(mossa, COLS)].pedine[altezzaColonnaDaConquistare - 1] = NULL;
+        partita->scacchiera[atItermediatePosition(mossa, COLS)].pedine[altezzaColonnaDaConquistare - 1] = NULL;
 
-        scacchiera[atItermediatePosition(mossa, COLS)].altezza--;
-    }
+        partita->scacchiera[atItermediatePosition(mossa, COLS)].altezza--;
+    } else
+        mossaDettagliata.hasConquered = FALSE;
 
     /*sposto la pedina e le sue configurazioni nella nuova casella*/
     for (i = 0; i < altezzaColonnaDaMuovere; i++) {
-        scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt,
-                              COLS)].pedine[i] = scacchiera[atPosition(
-                mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i];
+        partita->scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].pedine[i]
+                = partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i];
 
         /*Setto il vecchio array pedine a null*/
-        scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i] = NULL;
+        partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[i] = NULL;
     }
 
     /*setto la nuova altezza della cella di destinazione*/
-    scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].altezza = scacchiera[atPosition(
-            mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
+    partita->scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].altezza
+            = partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza;
 
     /*rendo la vecchia posizione della pedina nulla*/
-    scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza = 0;
+    partita->scacchiera[atPosition(mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].altezza = 0;
 
-    commander = scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].pedine[
-            altezzaColonnaDaMuovere - 1];
+    commander = partita->scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].pedine[altezzaColonnaDaMuovere - 1];
 
+    //printf("\n\n\n\n");
+    //draw(partita->scacchiera, LATO_SCACCHIERA);
     /* controllo se la pedina va promossa */
-    if ((mossa.posizioneFinale.riga == 0 && commander->colore == BIANCO) ||
-        (mossa.posizioneFinale.riga == COLS - 1 && commander->colore == NERO)) {
+    if (((mossa.posizioneFinale.riga == 0 && commander->colore == BIANCO) ||
+         (mossa.posizioneFinale.riga == COLS - 1 && commander->colore == NERO)) && !commander->isPromossa) {
+
         commander->isPromossa = TRUE;
         mossaDettagliata.hasBeenPromoted = TRUE;
     } else
         mossaDettagliata.hasBeenPromoted = FALSE;
 
+    /* cambio il turno */
+    switchTurno(&partita->turnoCorrente);
+
+    /*pushBack(&partita.mossePartita, mosseDisponibili.mosse[numeroMossa - 1]);*/
+    DYN_ARR_PUSH(partita->mosseDettagliatePartita, mossaDettagliata);
     return mossaDettagliata;
 }
 
@@ -433,9 +454,7 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
     altezzaColonnaMovente = partita->scacchiera[atPosition(dettagliUltimaMossa.mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].altezza;
 
     /* controllo se la mossa era di conquista */
-    if ((colonnaFinaleInt == colonnaPedinaInt + 2 || colonnaFinaleInt == colonnaPedinaInt - 2) &&
-        (dettagliUltimaMossa.mossa.posizioneFinale.riga == dettagliUltimaMossa.mossa.posizionePedina.riga - 2 ||
-         dettagliUltimaMossa.mossa.posizioneFinale.riga == dettagliUltimaMossa.mossa.posizionePedina.riga + 2)) {
+    if (dettagliUltimaMossa.hasConquered) {
 
         altezzaColonnaIntermedia = partita->scacchiera[atItermediatePosition(dettagliUltimaMossa.mossa, COLS)].altezza;
 
@@ -479,18 +498,97 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
         partita->scacchiera[atPosition(dettagliUltimaMossa.mossa.posizionePedina.riga, colonnaPedinaInt, COLS)].pedine[
                 altezzaColonnaMovente - 1]->isPromossa = FALSE;
 
-    partita->turnoCorrente = switchTurno(partita->turnoCorrente);
+    switchTurno(&partita->turnoCorrente);
 
     DYN_ARR_REMOVE_ELEM(partita->mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) - 1);
 
     return TRUE;
 }
 
-enum colore switchTurno(enum colore turnoCorrente) {
-    if (turnoCorrente == BIANCO)
-        return NERO;
+int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
+    dyn_arr_mossa_t mosseDisponibili;
+    int i, bestScore, evaluation;
+
+    DYN_ARR_INIT_DEFAULT(mosseDisponibili);
+    mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
+
+    if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
+        if (turno == BIANCO)
+            return evaluateBoard(partita->scacchiera, ROWS, COLS) - 10;
+        else
+            return evaluateBoard(partita->scacchiera, ROWS, COLS) + 10;
+    }
+
+    if (maxDepth == currentDepth) {
+        return evaluateBoard(partita->scacchiera, ROWS, COLS);
+    }
+
+    if (turno == BIANCO) {
+        bestScore = INT_MIN;
+
+        for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
+            mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
+            muoviPedina(partita, COLS, mossa);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore);
+            bestScore = max(bestScore, evaluation);
+
+            if (evaluation == bestScore && BIANCO == maxPlayer && currentDepth == 0)
+                *mossaMigliore = mossa;
+
+            annullaUltimaMossa(partita, COLS);
+        }
+    } else {
+        bestScore = INT_MAX;
+
+        for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
+            mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
+            muoviPedina(partita, COLS, mossa);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore);
+            bestScore = min(bestScore, evaluation);
+
+            if (evaluation == bestScore && NERO == maxPlayer && currentDepth == 0)
+                *mossaMigliore = mossa;
+
+            annullaUltimaMossa(partita, COLS);
+        }
+    }
+
+    DYN_ARR_DESTROY(mosseDisponibili);
+
+    return bestScore;
+}
+
+int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
+    _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore);
+}
+
+int evaluateBoard(cella_t *scacchiera, size_t ROWS, size_t COLS) {
+    int score = 0, i, j, segnoColore;
+
+    for (i = 0; i < ROWS; ++i) {
+        for (j = 0; j < COLS; ++j) {
+            if (scacchiera[atPosition(i, j, COLS)].altezza != 0) {
+                if (scacchiera[atPosition(i, j, COLS)].pedine[scacchiera[atPosition(i, j, COLS)].altezza - 1]->colore == BIANCO)
+                    segnoColore = 1;
+                else
+                    segnoColore = -1;
+
+                if (scacchiera[atPosition(i, j, COLS)].pedine[scacchiera[atPosition(i, j, COLS)].altezza - 1]->isPromossa)
+                    score += 2 * segnoColore;
+                else
+                    score += 1 * segnoColore;
+            }
+        }
+    }
+
+    return score;
+}
+
+void switchTurno(enum colore *turnoCorrente) {
+    if (*turnoCorrente == BIANCO)
+        *turnoCorrente = NERO;
     else
-        return BIANCO;
+        *turnoCorrente = BIANCO;
 }
 
 size_t atPosition(size_t row, size_t col, size_t width) {

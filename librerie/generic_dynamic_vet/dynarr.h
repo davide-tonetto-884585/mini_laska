@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DYN_ARR_DEFAULT_CAPACITY (2)
+#define DYN_ARR_DEFAULT_CAPACITY (2) /**< capacità di default dei vettori dinamici */
 
 /**
  * @brief enum che implementa il tipo bool

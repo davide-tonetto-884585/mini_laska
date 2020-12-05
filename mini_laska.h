@@ -70,8 +70,7 @@ struct mossa {
 };
 typedef struct mossa mossa_t;
 
-/* creo un vettore dinamico di tipo struct mossa */
-DYN_ARR_CREATE(mossa_t);
+DYN_ARR_CREATE(mossa_t); /**< definisco globalmente un vettore dinamico (costituito da una struct) di elementi di tipo struct mossa che poi gestirò tramite la libreria apposita */
 
 /**
  * @brief struct utilizzato per salvare una mossa effettuata in dettaglio
@@ -79,15 +78,15 @@ DYN_ARR_CREATE(mossa_t);
  * codesto struct permette di salvare oltre alla mossa effettuata le eventuali pedine eliminate durante una conquista
  * cosi da non perdere traccia di quest'ultime. Ciò ci è necessario per annullare una mossa.
  */
- struct mossa_dettagliata {
-     mossa_t mossa;
-     pedina_t *pedinaEliminata; /**< puntatore che tiene traccia di una pedina eventualmente eliminata durante la mossa */
-     bool_t hasBeenPromoted; /**< variabile booleana che, se a TRUE, indica che una pedina è stata promossa durante la mossa */
- };
+struct mossa_dettagliata {
+    mossa_t mossa;
+    pedina_t *pedinaEliminata; /**< puntatore che tiene traccia di una pedina eventualmente eliminata durante la mossa */
+    bool_t hasBeenPromoted; /**< variabile booleana che, se a TRUE, indica che una pedina è stata promossa durante la mossa */
+    bool_t hasConquered; /**< variabile booleana che indica se la mossa è di conquista o meno */
+};
 typedef struct mossa_dettagliata mossa_dettagliata_t;
 
- /* creo un vettore dinamico di tipo struct mossa_dettagliata */
- DYN_ARR_CREATE(mossa_dettagliata_t);
+DYN_ARR_CREATE(mossa_dettagliata_t); /**< definisco globalmente un vettore dinamico (costituito da una struct) di elementi di tipo struct mossa_dettagliata che poi gestirò tramite la libreria apposita */
 
 /**
  * @brief struttura che definisce lo stato della partita
@@ -98,7 +97,7 @@ typedef struct mossa_dettagliata mossa_dettagliata_t;
  */
 struct partita {
     enum colore turnoCorrente;
-    cella_t scacchiera[LATO_SCACCHIERA * LATO_SCACCHIERA]; /**< matrice di struct cella che rappresenta la scacchiera */
+    cella_t scacchiera[LATO_SCACCHIERA * LATO_SCACCHIERA]; /**< matrice flattened di struct cella che rappresenta la scacchiera */
     bool_t isEnded; /**< variabile booleana che definisce se la partita è conclusa (true) o non è conclusa (false) */
     dyn_arr_mossa_dettagliata_t mosseDettagliatePartita;
 };
@@ -107,17 +106,17 @@ typedef struct partita partita_t;
 /**
  * @brief funzione di inizializzazione della partita
  *
- * funzione che passata la matrice rappresentante la scacchiera ne inizializza gli elementi a inizio gioco,
- * la funzione allocherà le pedine della scacchiera tramite malloc, perciò bisognerà liberare la memoria con
- * la funzione freePartita a fine partita
+ * funzione che passata la partita ne inizializza gli elementi a inizio gioco impostando il turno iniziale a BIANCO,
+ * isEnded a FALSE e inoltre la funzione allocherà le pedine della scacchiera e l'array delle mosse tramite malloc,
+ * perciò bisognerà liberare la memoria con la funzione freePartita a fine partita.
  *
- * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
+ * @param *partita - struct partita
  * @param ROWS - numero di righe della scacchiera
  * @param COLS - numero di colonne della scacchiera
  *
  * @return 1 se l'inizializzazione è andata a buon fine, 0 altrimenti
  */
-bool_t init_game(cella_t *scacchiera, size_t ROWS, size_t COLS);
+bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS);
 
 /**
  * @brief funzione che stampa la scacchiera in base alla matrice delle pedine passata per argomento
@@ -166,21 +165,22 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
 
 /**
  * funzione che muove la pedina indicata dalle coordinate iniziali alle coordinate finali, conquista se
- * la mossa lo richiede ed effettua la promozione in caso di necessità,
- * la funzione non effettua controlli sulla validità della mossa, per fare ciò utilizzare la funzione controlloMossa
+ * la mossa lo richiede ed effettua la promozione in caso di necessità, inoltre agigorna il turno corrente e aggiunge
+ * il resoconto della mossa (mossa_dettagliata) al vettore dinamico sito in partita.
+ * La funzione non effettua controlli sulla validità della mossa, per fare ciò utilizzare la funzione controlloMossa
  *
- * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
+ * @param *partita - puntatore alla partita
  * @param COLS - numero di colonne della scacchiera
  * @param mossa - struttura mossa che contiene la posizione iniziale e finale della mossa da effettuare
  *
  * @return mossa_dettagliata - resoconto della mossa
  */
-mossa_dettagliata_t muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa);
+mossa_dettagliata_t muoviPedina(partita_t *partita, size_t COLS, mossa_t mossa);
 
 /**
  * funzione che passata la partita permette di annullare l'ultima mossa effettuata
  *
- * @param partita - partita di cui si vuole annullare l'ultima mossa
+ * @param partita - puntatore alla partita di cui si vuole annullare l'ultima mossa
  * @param COLS - numero colonne della scacchiera
  *
  * @return bool_t - FALSE se durante la partita non si sono ancora effettuate mosse
@@ -188,16 +188,47 @@ mossa_dettagliata_t muoviPedina(cella_t *scacchiera, size_t COLS, mossa_t mossa)
 bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
 
 /**
+ * funzione che implementa l'algoritmo minimax per il calcolo della mossa migliore per il computer
+ *
+ * @param partita - puntatore alla partita corrente
+ * @param ROWS - numero righe scacchiera
+ * @param COLS - numero colonne scacchiera
+ * @param maxDepth - profondità massima di calcolo da parte dell'algoritmo
+ * @param currentDepth - profondità corrente (passare sempre 0)
+ * @param maxPlayer - giocatore da massimizzare
+ * @param turno - turno corrente nella partita
+ * @param mossaMigliore - puntatore a mossa_t dove si salverà la miglio mossa calcolata
+ *
+ * @return int
+ */
+int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore);
+
+/**
+ * stub della funzione _minimax che implementa la strategia della cpu tramite l'algoritmo di minimax
+ *
+ * @param partita - puntatore alla partita corrente
+ * @param maxDepth - profondità massima di calcolo da parte dell'algoritmo
+ * @param maxPlayer - giocatore da massimizzare
+ * @param turno - turno corrente nella partita
+ * @param mossaMigliore - puntatore a mossa_t dove si salverà la miglio mossa calcolata
+ *
+ * @return int
+ */
+int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore);
+
+int evaluateBoard(cella_t *scacchiera, size_t ROWS, size_t COLS);
+
+/**
  * @brief funzione che passato il turno attuale lo cambia
  *
- * funzione che restituisce il colore opposto a quello passato e che cosi facendo permette
+ * funzione che cambia il colore passato e che cosi facendo permette
  * di cambiare turno durante la partita
  *
  * @param turnoCorrente - colore del turno attuale
  *
- * @return colore - colore opposto a quello passato
+ * @return void
  */
-enum colore switchTurno(enum colore turnoCorrente);
+void switchTurno(enum colore *turnoCorrente);
 
 /**
  * @brief funzione che restitruisce la posizione dell'elemento di una matrice flattened
@@ -233,7 +264,7 @@ size_t atItermediatePosition(mossa_t mossaConquista, size_t width);
  *
  * funzione che passata la scacchiera della partita libera tramite free() le pedine e il vettore dinamico delle mosse
  *
- * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
+ * @param partita - variabile partita contenente le informazioni della partita e i puntatori alle memorie da deallocare
  * @param COLS - numero di colonne della scacchiera
  * @param ROWS - numero di righe della scacchiera
  *

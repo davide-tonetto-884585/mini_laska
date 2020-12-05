@@ -1,10 +1,9 @@
-/** @file dynamic_vet.h
+/* @file dynamic_vet.h
  *  @brief Prototipi delle funzioni per la gestione dei vettori dinamici di mossa
  *
  *  Contiene i protoptipi delle funzioni che gestiscono
  *  il vettori dinamici di mossa
  */
-
 
 #ifndef MINI_LASKA_DYNAMIC_VET_H
 #define MINI_LASKA_DYNAMIC_VET_H

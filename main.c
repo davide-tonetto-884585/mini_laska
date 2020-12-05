@@ -13,113 +13,125 @@ int main() {
     /*variabile per ciclo for*/
     int i;
 
-    /*variabile in cui salvo la mossa che l'utente vuole effettuare*/
-    int numeroMossa;
+    /*variabile in cui salvo la mossa che l'utente vuole effettuare e variabile in cui salvo la modalità che l'utente desidera giocare */
+    int numeroMossa, numeroModalita;
+
+    /* variabile che indica la modalità di gioco scelta: true contro computer, false contro altro giocatore locale */
+    bool_t modVsCPU;
 
     /*variabile che indica se la mossa inserita è valida o meno*/
-    bool_t isMossaValida;
+    bool_t isInputValido;
+
+    /* variabile contenete l'index della miglior mossa calcolata per la cpu*/
+    mossa_t mossaMigliore;
 
     /*vettore dinamico mosse*/
     dyn_arr_mossa_t mosseDisponibili;
 
-    /*mossa dettagliata da aggiungere al vettore dinamico situato in partita*/
-    mossa_dettagliata_t mossaDettagliata;
-
-    /*inizializzo la partita*/
+    /*creo la variabile partita*/
     partita_t partita;
 
-    /*inizializzo il turno iniziale al BIANCO*/
-    partita.turnoCorrente = BIANCO;
-
-    /*inizializzo isEnded a 0 cosi da indicare che la partita non è finita*/
-    partita.isEnded = FALSE;
-
-    /*inizializzo il vettore dinamico che terrà tutte le mosse effettuate durante la partita*/
-    DYN_ARR_INIT_DEFAULT(partita.mosseDettagliatePartita);
-    /*if (!initVet(&partita.mossePartita, 10)){
-        printf("Errore inizializzazione partita.");
-        return 1;
-    }*/
-
-    /*inizializzo la matrice scacchiera per far partire la partita e controllo che tutto sia andato a buon fine*/
-    if (!init_game(&(partita.scacchiera[0]), LATO_SCACCHIERA, LATO_SCACCHIERA)) {
+    /*inizializzo la partita e controllo che tutto sia andato a buon fine*/
+    if (!init_game(&partita, LATO_SCACCHIERA, LATO_SCACCHIERA)) {
         freePartita(partita, LATO_SCACCHIERA, LATO_SCACCHIERA);
-        DYN_ARR_DESTROY(partita.mosseDettagliatePartita);
         printf("Errore inizializzazione partita.");
         return 1;
+    }
+
+    isInputValido = FALSE;
+    while (!isInputValido){
+        printf("Seleziona la modalità di gioco:\n1) Player vs Computer\n2) Player vs Player\nmodalità: ");
+        if (inputInt(&numeroModalita) && numeroModalita <= 2 && numeroModalita >= 1) {
+            isInputValido = TRUE;
+            if (numeroModalita == 1)
+                modVsCPU = TRUE;
+            else
+                modVsCPU = FALSE;
+        } else
+            printf("Seleziona una modalità valida!\n");
     }
 
     /*ciclo che continua fino alla fine della partita*/
     while (!partita.isEnded) {
         /*stampo l'attuale situazione della partita*/
         printf("\n");
-        draw(&(partita.scacchiera[0]), LATO_SCACCHIERA);
+        draw(partita.scacchiera, LATO_SCACCHIERA);
 
-        /*risetto la variabile isMossaValida a FALSE per poter entrare nel ciclo che richiede la mossa*/
-        isMossaValida = FALSE;
+        /*risetto la variabile isInputValido a FALSE per poter entrare nel ciclo che richiede la mossa*/
+        isInputValido = FALSE;
 
         /*finchè l'utente non seleziona una mossa valida richiedo il numero mossa*/
-        while (!isMossaValida) {
+        while (!isInputValido) {
             /*Stampo il colore cui spetta il turno*/
             printf("Turno: %s;\n", partita.turnoCorrente == BIANCO ? "Bianco" : "Nero");
 
-            /*ottengo le mosse disponibili*/
-            mosseDisponibili = trovaMosseDisponibili(&(partita.scacchiera[0]), LATO_SCACCHIERA, LATO_SCACCHIERA,
-                                                     partita.turnoCorrente);
+            if (partita.turnoCorrente == NERO && modVsCPU) {
+                mosseDisponibili = trovaMosseDisponibili(partita.scacchiera, LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
 
-            /*controllo se la partita è conclusa*/
-            if (/*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
-                partita.isEnded = TRUE;
-                break;
-            }
+                printf("Mosse disponibili:\n");
+                for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
+                    printf("%d) ", i + 1);
+                    stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
+                    printf(" | ");
+                }
 
-            printf("Mosse disponibili:\n");
-            for (i = 0; i < /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
-                printf("%d) ", i + 1);
-                /*stampaMossa(mosseDisponibili.mosse[i]);*/
-                stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
-                printf(" | ");
-            }
+                minimax(&partita, 5, NERO, NERO, &mossaMigliore);
 
-            /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
-            if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
-                printf("%d) annulla l'ultima mossa | %d) Resa", i + 1, i + 2);
+                printf("\nMossa del computer: ");
+                stampaMossa(mossaMigliore);
 
-            printf("\nInserisci il numero corrispondente all'azione che vuoi effettuare: ");
-
-            /*se la funzione controlloMossa ritorna 1 allora la mossa è valida ed esco dal ciclo altrimenti richiedo nuovamente la mossa*/
-            if (inputInt(&numeroMossa) && numeroMossa <= /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) &&
-                numeroMossa >= 1) {
                 /*effettuo la mossa*/
-                mossaDettagliata = muoviPedina(&(partita.scacchiera[0]),
-                                               LATO_SCACCHIERA, /*mosseDisponibili.mosse[numeroMossa - 1]*/
-                                               DYN_ARR_GET_ELEM(mosseDisponibili, numeroMossa - 1));
+                muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
+                isInputValido = TRUE;
+            } else {
+                /*ottengo le mosse disponibili*/
+                mosseDisponibili = trovaMosseDisponibili(partita.scacchiera, LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
 
-                /*aggiungo la mossa la vettore delle mosse della partita*/
-                /*pushBack(&partita.mossePartita, mosseDisponibili.mosse[numeroMossa - 1]);*/
-                DYN_ARR_PUSH(partita.mosseDettagliatePartita, mossaDettagliata);
+                /*controllo se la partita è conclusa*/
+                if (/*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
+                    partita.isEnded = TRUE;
+                    break;
+                }
 
-                /*libero la memoria allocata per l'array mosseDisponibili*/
-                /*freeVet(&mosseDisponibili);*/
-                DYN_ARR_DESTROY(mosseDisponibili);
+                printf("Mosse disponibili:\n");
+                for (i = 0; i < /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
+                    printf("%d) ", i + 1);
+                    /*stampaMossa(mosseDisponibili.mosse[i]);*/
+                    stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
+                    printf(" | ");
+                }
 
-                /*Una volta effettuata la mossa passo al turno successivo*/
-                partita.turnoCorrente = switchTurno(partita.turnoCorrente);
+                /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
+                if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
+                    printf("%d) annulla l'ultima mossa | %d) Resa", i + 1, i + 2);
 
-                /*indico che la mossa è andata a buon fine*/
-                isMossaValida = TRUE;
-            } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
-                       DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
-                /* annullo l'ultima mossa dell'altro giocatore */
-                annullaUltimaMossa(&partita, LATO_SCACCHIERA);
-                isMossaValida = TRUE;
-            } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
-                       DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
-                /* il giocatore si è arreso */
-                partita.isEnded = TRUE;
-                break;
-            } else
-                printf("\nMossa non valida! Inserire nuovamente una mossa valida.\n");
+                printf("\nInserisci il numero corrispondente all'azione che vuoi effettuare: ");
+
+                /*se la funzione controlloMossa ritorna 1 allora la mossa è valida ed esco dal ciclo altrimenti richiedo nuovamente la mossa*/
+                if (inputInt(&numeroMossa) && numeroMossa <= /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) && numeroMossa >= 1) {
+                    /*effettuo la mossa*/
+                    muoviPedina(&partita, LATO_SCACCHIERA, /*mosseDisponibili.mosse[numeroMossa - 1]*/
+                                DYN_ARR_GET_ELEM(mosseDisponibili, numeroMossa - 1));
+
+                    /*libero la memoria allocata per l'array mosseDisponibili*/
+                    /*freeVet(&mosseDisponibili);*/
+                    DYN_ARR_DESTROY(mosseDisponibili);
+
+                    /*indico che la mossa è andata a buon fine*/
+                    isInputValido = TRUE;
+                } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
+                           DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                    /* annullo l'ultima mossa dell'altro giocatore */
+                    annullaUltimaMossa(&partita, LATO_SCACCHIERA);
+                    isInputValido = TRUE;
+                } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
+                           DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                    /* il giocatore si è arreso */
+                    partita.isEnded = TRUE;
+                    break;
+                } else
+                    printf("\nMossa non valida! Inserire nuovamente una mossa valida.\n");
+            }
         }
     }
 
