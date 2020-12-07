@@ -5,6 +5,7 @@
  */
 #include <stdio.h>
 #include "mini_laska.h"
+#include <unistd.h>
 
 /**
  * main del programma dove viene gestito il gioco tramite l'utilizzo di strutture e funzioni (vedere file mini_laska.h)
@@ -39,7 +40,7 @@ int main() {
     }
 
     isInputValido = FALSE;
-    while (!isInputValido){
+    while (!isInputValido) {
         printf("Seleziona la modalità di gioco:\n1) Player vs Computer\n2) Player vs Player\nmodalità: ");
         if (inputInt(&numeroModalita) && numeroModalita <= 2 && numeroModalita >= 1) {
             isInputValido = TRUE;
@@ -60,22 +61,38 @@ int main() {
         /*risetto la variabile isInputValido a FALSE per poter entrare nel ciclo che richiede la mossa*/
         isInputValido = FALSE;
 
+        /*Stampo il colore cui spetta il turno*/
+        printf("Turno: %s;\n", partita.turnoCorrente == BIANCO ? "Bianco" : "Nero");
+
+        mosseDisponibili = trovaMosseDisponibili(partita.scacchiera, LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
+
+        printf("Mosse disponibili:\n");
+        for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
+            printf("%d) ", i + 1);
+            stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
+            printf(" | ");
+        }
+
+        /*controllo se la partita è conclusa*/
+        if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
+            printf("Nessuna mossa disponibile!\n");
+            partita.isEnded = TRUE;
+            break;
+        }
+
         /*finchè l'utente non seleziona una mossa valida richiedo il numero mossa*/
         while (!isInputValido) {
-            /*Stampo il colore cui spetta il turno*/
-            printf("Turno: %s;\n", partita.turnoCorrente == BIANCO ? "Bianco" : "Nero");
-
             if (partita.turnoCorrente == NERO && modVsCPU) {
-                mosseDisponibili = trovaMosseDisponibili(partita.scacchiera, LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
+                minimax(&partita, 8, NERO, NERO, &mossaMigliore);
 
-                printf("Mosse disponibili:\n");
-                for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
-                    printf("%d) ", i + 1);
-                    stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
-                    printf(" | ");
-                }
+                printf("\nMossa del computer: ");
+                stampaMossa(mossaMigliore);
 
-                minimax(&partita, 5, NERO, NERO, &mossaMigliore);
+                /*effettuo la mossa*/
+                muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
+                isInputValido = TRUE;
+            } else if (partita.turnoCorrente == BIANCO && modVsCPU) { //torgliere questo else if per giocare contro il pc altrimenti gioca pc contro pc
+                minimax(&partita, 6, BIANCO, BIANCO, &mossaMigliore);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
@@ -84,23 +101,6 @@ int main() {
                 muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
                 isInputValido = TRUE;
             } else {
-                /*ottengo le mosse disponibili*/
-                mosseDisponibili = trovaMosseDisponibili(partita.scacchiera, LATO_SCACCHIERA, LATO_SCACCHIERA, partita.turnoCorrente);
-
-                /*controllo se la partita è conclusa*/
-                if (/*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
-                    partita.isEnded = TRUE;
-                    break;
-                }
-
-                printf("Mosse disponibili:\n");
-                for (i = 0; i < /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili); ++i) {
-                    printf("%d) ", i + 1);
-                    /*stampaMossa(mosseDisponibili.mosse[i]);*/
-                    stampaMossa(DYN_ARR_GET_ELEM(mosseDisponibili, i));
-                    printf(" | ");
-                }
-
                 /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
                 if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
                     printf("%d) annulla l'ultima mossa | %d) Resa", i + 1, i + 2);
@@ -108,23 +108,21 @@ int main() {
                 printf("\nInserisci il numero corrispondente all'azione che vuoi effettuare: ");
 
                 /*se la funzione controlloMossa ritorna 1 allora la mossa è valida ed esco dal ciclo altrimenti richiedo nuovamente la mossa*/
-                if (inputInt(&numeroMossa) && numeroMossa <= /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) && numeroMossa >= 1) {
+                if (inputInt(&numeroMossa) && numeroMossa <= DYN_ARR_GET_SIZE(mosseDisponibili) && numeroMossa >= 1) {
                     /*effettuo la mossa*/
-                    muoviPedina(&partita, LATO_SCACCHIERA, /*mosseDisponibili.mosse[numeroMossa - 1]*/
-                                DYN_ARR_GET_ELEM(mosseDisponibili, numeroMossa - 1));
+                    muoviPedina(&partita, LATO_SCACCHIERA, DYN_ARR_GET_ELEM(mosseDisponibili, numeroMossa - 1));
 
                     /*libero la memoria allocata per l'array mosseDisponibili*/
-                    /*freeVet(&mosseDisponibili);*/
                     DYN_ARR_DESTROY(mosseDisponibili);
 
                     /*indico che la mossa è andata a buon fine*/
                     isInputValido = TRUE;
-                } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
+                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* annullo l'ultima mossa dell'altro giocatore */
                     annullaUltimaMossa(&partita, LATO_SCACCHIERA);
                     isInputValido = TRUE;
-                } else if (numeroMossa == /*mosseDisponibili.size*/ DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
+                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* il giocatore si è arreso */
                     partita.isEnded = TRUE;
@@ -135,12 +133,15 @@ int main() {
         }
     }
 
+
     /* stampo il vincitore della partita */
     if (partita.isEnded && partita.turnoCorrente == BIANCO) {
         printf("\nIl giocatore Nero ha vinto!!\n");
     } else if (partita.isEnded && partita.turnoCorrente == NERO) {
         printf("\nIl giocatore Bianco ha vinto!!\n");
     }
+
+    printf("Numero mosse: %lu", DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita));
 
     /*Libero la memoria allocata per la partita*/
     freePartita(partita, LATO_SCACCHIERA, LATO_SCACCHIERA);

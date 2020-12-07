@@ -405,8 +405,6 @@ mossa_dettagliata_t muoviPedina(partita_t *partita, size_t COLS, mossa_t mossa) 
 
     commander = partita->scacchiera[atPosition(mossa.posizioneFinale.riga, colonnaFinaleInt, COLS)].pedine[altezzaColonnaDaMuovere - 1];
 
-    //printf("\n\n\n\n");
-    //draw(partita->scacchiera, LATO_SCACCHIERA);
     /* controllo se la pedina va promossa */
     if (((mossa.posizioneFinale.riga == 0 && commander->colore == BIANCO) ||
          (mossa.posizioneFinale.riga == COLS - 1 && commander->colore == NERO)) && !commander->isPromossa) {
@@ -508,18 +506,12 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
     dyn_arr_mossa_t mosseDisponibili;
     int i, bestScore, evaluation;
+    mossa_t mossaContraria;
 
     DYN_ARR_INIT_DEFAULT(mosseDisponibili);
     mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
 
-    if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
-        if (turno == BIANCO)
-            return evaluateBoard(partita->scacchiera, ROWS, COLS) - 10;
-        else
-            return evaluateBoard(partita->scacchiera, ROWS, COLS) + 10;
-    }
-
-    if (maxDepth == currentDepth) {
+    if (maxDepth == currentDepth || DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
         return evaluateBoard(partita->scacchiera, ROWS, COLS);
     }
 
@@ -532,8 +524,19 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
             evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore);
             bestScore = max(bestScore, evaluation);
 
+            mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
+            mossaContraria.posizionePedina.colonna = mossa.posizioneFinale.colonna;
+            mossaContraria.posizioneFinale.riga = mossa.posizionePedina.riga;
+            mossaContraria.posizioneFinale.colonna = mossa.posizionePedina.colonna;
+
             if (evaluation == bestScore && BIANCO == maxPlayer && currentDepth == 0)
-                *mossaMigliore = mossa;
+                /* controllo che non ripeta la una mossa contraria a quella precedentemente fatta */
+                if (DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) >= 3 && DYN_ARR_GET_SIZE(mosseDisponibili) != 1) {
+                    mossa_t mossaPrec = DYN_ARR_GET_ELEM(partita->mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) - 3).mossa;
+                    if (!equalsMossa(mossaPrec, mossaContraria))
+                        *mossaMigliore = mossa;
+                } else
+                    *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
         }
@@ -546,8 +549,19 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
             evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore);
             bestScore = min(bestScore, evaluation);
 
+            mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
+            mossaContraria.posizionePedina.colonna = mossa.posizioneFinale.colonna;
+            mossaContraria.posizioneFinale.riga = mossa.posizionePedina.riga;
+            mossaContraria.posizioneFinale.colonna = mossa.posizionePedina.colonna;
+
             if (evaluation == bestScore && NERO == maxPlayer && currentDepth == 0)
-                *mossaMigliore = mossa;
+                /* controllo che non ripeta la una mossa contraria a quella precedentemente fatta */
+                if (DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) >= 3 && DYN_ARR_GET_SIZE(mosseDisponibili) != 1) {
+                    mossa_t mossaPrec = DYN_ARR_GET_ELEM(partita->mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) - 3).mossa;
+                    if (!equalsMossa(mossaPrec, mossaContraria))
+                        *mossaMigliore = mossa;
+                } else
+                    *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
         }
@@ -559,7 +573,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
 }
 
 int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
-    _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore);
+    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore);
 }
 
 int evaluateBoard(cella_t *scacchiera, size_t ROWS, size_t COLS) {
@@ -637,6 +651,11 @@ bool_t ShiftADX(pedina_t **v, int n, int p, int v_size) {
 
 void stampaMossa(mossa_t mossa) {
     printf("%c%d - %c%d", mossa.posizionePedina.colonna, mossa.posizionePedina.riga, mossa.posizioneFinale.colonna, mossa.posizioneFinale.riga);
+}
+
+bool_t equalsMossa(mossa_t m1, mossa_t m2) {
+    return m1.posizionePedina.riga == m2.posizionePedina.riga && m1.posizionePedina.colonna == m2.posizionePedina.colonna &&
+           m1.posizioneFinale.riga == m2.posizioneFinale.riga && m1.posizioneFinale.colonna == m2.posizioneFinale.colonna;
 }
 
 bool_t inputInt(int *var) {

@@ -296,6 +296,16 @@ bool_t ShiftADX(pedina_t **v, int n, int p, int v_size);
 void stampaMossa(mossa_t mossa);
 
 /**
+ * funzione che verifica se due mosse sono uguali
+ *
+ * @param m1
+ * @param m2
+ *
+ * @return bool
+ */
+bool_t equalsMossa(mossa_t m1, mossa_t m2);
+
+/**
  * @brief funzione che richiede un parametro in input all'utente e controlla che sia di tipo int valido
  *
  * @param var - puntatore alla variabile in cui salvare l'input
