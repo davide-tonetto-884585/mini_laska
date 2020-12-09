@@ -54,9 +54,13 @@ int main() {
 
     /*ciclo che continua fino alla fine della partita*/
     while (!partita.isEnded) {
-        /*stampo l'attuale situazione della partita*/
+        /*stampo l'attuale situazione della partita ed evidenzio l'ultima mossa effettuata*/
         printf("\n");
-        draw(partita.scacchiera, LATO_SCACCHIERA);
+        if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) == 0)
+            draw(partita.scacchiera, LATO_SCACCHIERA, NULL);
+        else
+            draw(partita.scacchiera, LATO_SCACCHIERA,
+                 &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
 
         /*risetto la variabile isInputValido a FALSE per poter entrare nel ciclo che richiede la mossa*/
         isInputValido = FALSE;
@@ -83,7 +87,7 @@ int main() {
         /*finchè l'utente non seleziona una mossa valida richiedo il numero mossa*/
         while (!isInputValido) {
             if (partita.turnoCorrente == NERO && modVsCPU) {
-                minimax(&partita, 7, NERO, NERO, &mossaMigliore);
+                minimax(&partita, 8, NERO, NERO, &mossaMigliore, evaluateBoard);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
@@ -91,16 +95,15 @@ int main() {
                 /*effettuo la mossa*/
                 muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
                 isInputValido = TRUE;
-            } else if (partita.turnoCorrente == BIANCO && modVsCPU) { /*torgliere questo else if per giocare contro il pc altrimenti gioca pc contro pc*/
-                minimax(&partita, 6, BIANCO, BIANCO, &mossaMigliore);
+            } /* else if (partita.turnoCorrente == BIANCO && modVsCPU) {
+                minimax(&partita, 6, BIANCO, BIANCO, &mossaMigliore, evaluateBoard);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
 
-                /*effettuo la mossa*/
                 muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
                 isInputValido = TRUE;
-            } else {
+            } */ else {
                 /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
                 if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
                     printf("%d) annulla l'ultima mossa | %d) Resa", i + 1, i + 2);
@@ -120,7 +123,11 @@ int main() {
                 } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* annullo l'ultima mossa dell'altro giocatore */
-                    annullaUltimaMossa(&partita, LATO_SCACCHIERA);
+                    if (modVsCPU) {
+                        annullaUltimaMossa(&partita, LATO_SCACCHIERA);
+                        annullaUltimaMossa(&partita, LATO_SCACCHIERA);
+                    } else
+                        annullaUltimaMossa(&partita, LATO_SCACCHIERA);
                     isInputValido = TRUE;
                 } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {

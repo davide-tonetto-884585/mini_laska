@@ -70,10 +70,20 @@ bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS) {
     return TRUE;
 }
 
-void draw(cella_t *scacchiera, size_t lato) {
+void draw(cella_t *scacchiera, size_t lato, mossa_t *mossa) {
     /*variabili utilizzate per ciclare i vari for*/
-    int rig, col, i, k, t;
+    int rig, col, i, k, t, colonnaPedinaInt, colonnaFinaleInt, mossaPedinaInt, mossaFinaleInt;
     char pedina;
+
+    if (mossa != NULL) {
+        /*converto le coodrdinate alfabetiche in intere*/
+        colonnaPedinaInt = mossa->posizionePedina.colonna - 97;
+        colonnaFinaleInt = mossa->posizioneFinale.colonna - 97;
+
+        /*inverto la coordinata della riga per poter accedere correttamente alla matrice*/
+        mossaPedinaInt = abs(mossa->posizionePedina.riga - (int) lato);
+        mossaFinaleInt = abs(mossa->posizioneFinale.riga - (int) lato);
+    }
 
     /*scorro le righe della scacchiera da 0 a lato - 1*/
     for (rig = 0; rig < lato + 1; rig++) {
@@ -129,8 +139,16 @@ void draw(cella_t *scacchiera, size_t lato) {
                             }
                         else if (i == 2) /*stampo le coordinate della casella attuale*/
                             printf(" %c%d       ", k + 97, abs(rig - (int) lato));
-                        else
-                            printf("          ");
+                        else {
+                            /* evidenzio la mossa se passata */
+                            if (mossa != NULL) {
+                                if ((k == colonnaPedinaInt && mossaPedinaInt == rig) || (k == colonnaFinaleInt && mossaFinaleInt == rig))
+                                    printf("        %s ", "x");
+                                else
+                                    printf("          ");
+                            } else
+                                printf("          ");
+                        }
                     }
 
                     /*controllo se mi trovo a fine ciclo definisco il contorno della scacchiera*/
@@ -204,7 +222,6 @@ bool_t controlloMossa(cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mos
 }
 
 dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente) {
-
     /*variabili usate per ciclare la scacchiera*/
     int i, j;
 
@@ -256,13 +273,11 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     DYN_ARR_PUSH(mosseValideConquista, mossa);
-                /* pushBack(&mosseValideConquista, mossa); *inserisce nel vettore delle mosse, se è una mossa valida*/
 
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     DYN_ARR_PUSH(mosseValideConquista, mossa);
-                /* pushBack(&mosseValideConquista, mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
 
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
                 if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->isPromossa) {
@@ -272,18 +287,14 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         DYN_ARR_PUSH(mosseValideConquista, mossa);
-                    /* pushBack(&mosseValideConquista,
-                             mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
 
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         DYN_ARR_PUSH(mosseValideConquista, mossa);
-                    /* pushBack(&mosseValideConquista,
-                             mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
                 }
 
-                if (/*mosseValideConquista.size*/ DYN_ARR_GET_SIZE(mosseValideConquista) > 0)
+                if (DYN_ARR_GET_SIZE(mosseValideConquista) > 0)
                     continue;/*rende il vettore perchè tanto è obbligato a fare mosse di conquista se ne ha trovate*/
 
                 /*controllo se ci sono mosse di spostamento valide per la pedina*/
@@ -292,13 +303,11 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     DYN_ARR_PUSH(mosseValide, mossa);
-                /* pushBack(&mosseValide, mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
 
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
                 if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                     DYN_ARR_PUSH(mosseValide, mossa);
-                /*pushBack(&mosseValide, mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
 
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
                 if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->isPromossa) {
@@ -307,20 +316,18 @@ dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t C
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         DYN_ARR_PUSH(mosseValide, mossa);
-                    /*pushBack(&mosseValide, mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
 
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
                     if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
                         DYN_ARR_PUSH(mosseValide, mossa);
-                    /*pushBack(&mosseValide, mossa);*inserisce nel vettore delle mosse, se è una mossa valida*/
                 }
             }
         }
     }
 
     /*ritorno il vettore corretto e libero quello che non verrà ritornato*/
-    if (/*mosseValideConquista.size*/ DYN_ARR_GET_SIZE(mosseValideConquista) > 0) {
+    if (DYN_ARR_GET_SIZE(mosseValideConquista) > 0) {
         DYN_ARR_DESTROY(mosseValide);
         return mosseValideConquista;
     }
@@ -417,7 +424,6 @@ mossa_dettagliata_t muoviPedina(partita_t *partita, size_t COLS, mossa_t mossa) 
     /* cambio il turno */
     switchTurno(&partita->turnoCorrente);
 
-    /*pushBack(&partita.mossePartita, mosseDisponibili.mosse[numeroMossa - 1]);*/
     DYN_ARR_PUSH(partita->mosseDettagliatePartita, mossaDettagliata);
     return mossaDettagliata;
 }
@@ -503,7 +509,8 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
     return TRUE;
 }
 
-int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
+int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
+             enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
     dyn_arr_mossa_t mosseDisponibili;
     int i, bestScore, evaluation;
     mossa_t mossaContraria;
@@ -521,7 +528,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, evaluateBoard);
             bestScore = max(bestScore, evaluation);
 
             mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
@@ -546,7 +553,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, evaluateBoard);
             bestScore = min(bestScore, evaluation);
 
             mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
@@ -572,11 +579,12 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
     return bestScore;
 }
 
-int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore) {
-    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore);
+int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno,
+            mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
+    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore, evaluateBoard);
 }
 
-int evaluateBoard(cella_t *scacchiera, size_t ROWS, size_t COLS) {
+int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS) {
     int score = 0, i, j, segnoColore;
 
     for (i = 0; i < ROWS; ++i) {

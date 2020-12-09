@@ -126,10 +126,11 @@ bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS);
  *
  * @param *scacchiera - matrice flattened contenente lo stato attuale della scacchiera della partita
  * @param lato - lunghezza di ciascun lato della scacchiera
+ * @param mossa - puntatore a una enìventuale ossa che verrà evidenziata per facilitare la lettura
  *
  * @return void
  */
-void draw(cella_t *scacchiera, size_t lato);
+void draw(cella_t *scacchiera, size_t lato, mossa_t *mossa);
 
 /**
  * @brief funzione che controlla se la mossa passata è valida secondo le regole del gioco
@@ -198,10 +199,13 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
  * @param maxPlayer - giocatore da massimizzare
  * @param turno - turno corrente nella partita
  * @param mossaMigliore - puntatore a mossa_t dove si salverà la miglio mossa calcolata
+ * @param evaluateBoard - puntatore a funzione che valuta la scacchiera e restituisce un intero (negativo see la scacchiera è a favore del nero,
+ * positivo altrimenti), parametri della funzione sonovla matrice flattened rappresentante la scacchiera, le righe e le colonne
  *
  * @return int
  */
-int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore);
+int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
+        enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t));
 
 /**
  * stub della funzione _minimax che implementa la strategia della cpu tramite l'algoritmo di minimax
@@ -211,12 +215,15 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
  * @param maxPlayer - giocatore da massimizzare
  * @param turno - turno corrente nella partita
  * @param mossaMigliore - puntatore a mossa_t dove si salverà la miglio mossa calcolata
+ * @param evaluateBoard - puntatore a funzione che valuta la scacchiera e restituisce un intero, parametri della funzione sono
+ * la matrice flattened rappresentante la scacchiera, le righe e le colonne
  *
  * @return int
  */
-int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno, mossa_t *mossaMigliore);
+int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno,
+        mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t));
 
-int evaluateBoard(cella_t *scacchiera, size_t ROWS, size_t COLS);
+int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS);
 
 /**
  * @brief funzione che passato il turno attuale lo cambia
