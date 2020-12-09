@@ -83,7 +83,7 @@ int main() {
         /*finchè l'utente non seleziona una mossa valida richiedo il numero mossa*/
         while (!isInputValido) {
             if (partita.turnoCorrente == NERO && modVsCPU) {
-                minimax(&partita, 8, NERO, NERO, &mossaMigliore);
+                minimax(&partita, 7, NERO, NERO, &mossaMigliore);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
@@ -91,7 +91,7 @@ int main() {
                 /*effettuo la mossa*/
                 muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
                 isInputValido = TRUE;
-            } else if (partita.turnoCorrente == BIANCO && modVsCPU) { //torgliere questo else if per giocare contro il pc altrimenti gioca pc contro pc
+            } else if (partita.turnoCorrente == BIANCO && modVsCPU) { /*torgliere questo else if per giocare contro il pc altrimenti gioca pc contro pc*/
                 minimax(&partita, 6, BIANCO, BIANCO, &mossaMigliore);
 
                 printf("\nMossa del computer: ");
