@@ -17,9 +17,12 @@ void *_dyn_arr_init(dyn_arr_info_t *info, size_t elem_size, size_t capacity) {
 void *_dyn_arr_push(void *data, dyn_arr_info_t *info, void *elem) {
     void *temp = data;
     if (info->size == info->capacity) {
-        temp = realloc(data, info->capacity * 2 * info->elem_size);
+        temp = malloc(info->capacity * 2 * info->elem_size);
         if (temp == NULL)
             exit(EXIT_FAILURE);
+
+        memcpy((char *) temp, data, info->size * info->elem_size);
+        free(data);
 
         info->capacity *= 2;
     }

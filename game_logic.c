@@ -1,12 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include "mini_laska.h"
-
-#define INPUT_SIZE (20) /**< costante che definisce la grandezza del buffer di input */
-#define C_RED "\x1b[31m"
-#define C_YELLOW  "\x1b[33m"
-#define C_RESET "\x1b[0m"
+#include "game_logic.h"
+#include "graphics/graphics.h"
+#include "utility/utility.h"
 
 int max(int a, int b) {
     return a > b ? a : b;
@@ -71,133 +68,6 @@ bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS) {
     DYN_ARR_INIT_DEFAULT(partita->mosseDettagliatePartita);
 
     return TRUE;
-}
-
-void draw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa) {
-    /*variabili utilizzate per ciclare i vari for*/
-    int rig, col, i, k, t, colonnaPedinaInt, colonnaFinaleInt, mossaPedinaInt, mossaFinaleInt;
-    char pedina;
-
-    /* variabili usate per contenere gli elementi di disegno */
-    char square = (char) 219u, v_line = (char) 179u, o_line = (char) 196u, top_sx = (char) 218u, top_dx = (char) 191u,
-            low_sx = (char) 192u, low_dx = (char) 217u, little_square = (char) 254u;
-
-    if (mossa != NULL) {
-        /*converto le coodrdinate alfabetiche in intere*/
-        colonnaPedinaInt = mossa->posizionePedina.colonna - 97;
-        colonnaFinaleInt = mossa->posizioneFinale.colonna - 97;
-
-        /*inverto la coordinata della riga per poter accedere correttamente alla matrice*/
-        mossaPedinaInt = abs(mossa->posizionePedina.riga - (int) lato);
-        mossaFinaleInt = abs(mossa->posizioneFinale.riga - (int) lato);
-    }
-
-    /*stampo il contorno superiore*/
-    printf("%c", top_sx);
-
-    for (col = 0; col < lato; col++)
-        printf("%c%c%c%c%c%c%c%c%c%c", o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line);
-
-    printf("%c\n", top_dx);
-
-    /*scorro le righe della scacchiera da 0 a lato - 1*/
-    for (rig = 0; rig < lato + 1; rig++) {
-
-        /*controllo di non essere arrivato all'ultima riga*/
-        if (rig != lato)
-
-            /*ciclo altre tre volte per definire l'altezza di ogni riga*/
-            for (i = 0; i < 5; i++) {
-                printf("%c", v_line);
-
-                /*ciclo nuovamente le colonne per colorarle e disegnare le pedine*/
-                for (k = 0; k < lato; k++) {
-
-                    /*controllo che permette di colorare la cella di nero o bianco*/
-                    if ((rig + k) % 2 != 0)
-                        printf("%c%c%c%c%c%c%c%c%c%c", square, square, square, square, square, square, square, square, square, square);
-                    else {
-                        /*se la pedina nella casella in cui mi trovo ha altezza 0 significa che è nulla e non la rappresento, altrimenti si*/
-
-                        if (i == 1) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[2] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[2]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[2]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[2]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 2) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[1] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[1]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[1]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[1]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 3) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[0] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[0]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[0]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[0]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                        printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 4) /*stampo le coordinate della casella attuale*/
-                            printf(" %c%d       ", k + 97, abs(rig - (int) lato));
-                        else {
-                            /* evidenzio la mossa se passata */
-                            if (mossa != NULL && i == 0) {
-                                if ((k == colonnaPedinaInt && mossaPedinaInt == rig) || (k == colonnaFinaleInt && mossaFinaleInt == rig))
-                                    printf("        %s ", "x");
-                                else
-                                    printf("          ");
-                            } else
-                                printf("          ");
-                        }
-                    }
-
-                    /*controllo se mi trovo a fine ciclo definisco il contorno della scacchiera*/
-                    if (k == lato - 1)
-                        printf("%c\n", v_line);
-                }
-            }
-    }
-
-    /*stampo il contorno inferiore*/
-    printf("%c", low_sx);
-
-    for (col = 0; col < lato; col++)
-        printf("%c%c%c%c%c%c%c%c%c%c", o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line, o_line);
-
-    printf("%c\n", low_dx);
 }
 
 bool_t controlloMossa(const cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mossa, enum colore turnoCorrente) {
@@ -559,6 +429,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
     mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
 
     if (maxDepth == currentDepth || DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
+        DYN_ARR_DESTROY(mosseDisponibili);
         return evaluateBoard(partita->scacchiera, ROWS, COLS);
     }
 
@@ -661,25 +532,6 @@ int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS) {
     return score;
 }
 
-void switchTurno(enum colore *turnoCorrente) {
-    if (*turnoCorrente == BIANCO)
-        *turnoCorrente = NERO;
-    else
-        *turnoCorrente = BIANCO;
-}
-
-size_t atPosition(size_t row, size_t col, size_t width) {
-    return row * width + col;
-}
-
-size_t atItermediatePosition(mossa_t mossaConquista, size_t width) {
-    int colonnaPedinaInt = mossaConquista.posizionePedina.colonna - 97;
-    int colonnaFinaleInt = mossaConquista.posizioneFinale.colonna - 97;
-
-    return ((mossaConquista.posizionePedina.riga + mossaConquista.posizioneFinale.riga) / 2) * width +
-           ((colonnaPedinaInt + colonnaFinaleInt) / 2);
-}
-
 void freePartita(partita_t partita, size_t ROWS, size_t COLS) {
     int r, c, i;
     mossa_dettagliata_t mossaDettagliata;
@@ -701,37 +553,3 @@ void freePartita(partita_t partita, size_t ROWS, size_t COLS) {
     DYN_ARR_DESTROY(partita.mosseDettagliatePartita);
 }
 
-bool_t ShiftADX(pedina_t **v, int n, int p, int v_size) {
-    int i;
-    if (n < v_size) {
-        for (i = n; i > p; i--)
-            v[i] = v[i - 1];
-        /*la cella di indice p è libera e può essere usata all'occorrenza*/
-        return TRUE;
-    } else
-        return FALSE;
-}
-
-void stampaMossa(mossa_t mossa) {
-    printf("%c%d - %c%d", mossa.posizionePedina.colonna, mossa.posizionePedina.riga, mossa.posizioneFinale.colonna, mossa.posizioneFinale.riga);
-}
-
-bool_t equalsMossa(mossa_t m1, mossa_t m2) {
-    return m1.posizionePedina.riga == m2.posizionePedina.riga && m1.posizionePedina.colonna == m2.posizionePedina.colonna &&
-           m1.posizioneFinale.riga == m2.posizioneFinale.riga && m1.posizioneFinale.colonna == m2.posizioneFinale.colonna;
-}
-
-bool_t inputInt(int *var) {
-    char *ptr;
-    char str[INPUT_SIZE];
-
-    fgets(str, INPUT_SIZE, stdin);
-    *var = (int) strtol(str, &ptr, 10);
-
-    if (*var == INT_MAX || *var == INT_MIN)
-        return FALSE;
-    else if (*var)
-        return TRUE;
-
-    return FALSE;
-}
