@@ -2,8 +2,10 @@
 #include "../utility/utility.h"
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
 #include <windows.h>
 #include <conio.h>
+#endif
 
 #define C_RED "\x1b[31m"
 #define C_YELLOW "\x1b[33m"
@@ -226,6 +228,20 @@ void multiPlatformDraw(const cella_t *scacchiera, size_t lato, const mossa_t *mo
 
 }
 
+/* stampa il titolo mini lasca */
+void titolo(){
+    printf("\n"
+           "  __  __ _       _   _                         \n"
+           " |  \\/  (_)     (_) | |                        \n"
+           " | \\  / |_ _ __  _  | |     __ _ ___  ___ __ _ \n"
+           " | |\\/| | | '_ \\| | | |    / _` / __|/ __/ _` |\n"
+           " | |  | | | | | | | | |___| (_| \\__ \\ (_| (_| |\n"
+           " |_|  |_|_|_| |_|_| |______\\__,_|___/\\___\\__,_|\n"
+           "                                               \n"
+           "                                               \n");
+}
+
+#ifdef _WIN32
 /* funzione che gestisce la selezione dell'opzione */
 void arrow_pos(int real_pos, int arrow_pos){
     if (real_pos == arrow_pos)
@@ -265,19 +281,6 @@ void menu_mod(bool_t *modVsCPU){
         printf("ERRORE DI SELEZIONE");
 }
 
-/* stampa il titolo mini lasca */
-void titolo(){
-    printf("\n"
-           "  __  __ _       _   _                         \n"
-           " |  \\/  (_)     (_) | |                        \n"
-           " | \\  / |_ _ __  _  | |     __ _ ___  ___ __ _ \n"
-           " | |\\/| | | '_ \\| | | |    / _` / __|/ __/ _` |\n"
-           " | |  | | | | | | | | |___| (_| \\__ \\ (_| (_| |\n"
-           " |_|  |_|_|_| |_|_| |______\\__,_|___/\\___\\__,_|\n"
-           "                                               \n"
-           "                                               \n");
-}
-
 /*setta il colore del terminale */
 void menu_color(){
     int pos = 1, key = 0;
@@ -308,3 +311,4 @@ void menu_color(){
 
     system("cls");
 }
+#endif

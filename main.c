@@ -41,8 +41,13 @@ int main() {
         return 1;
     }
 
+    titolo();
+
+#ifdef _WIN32
+    menu_mod(&modVsCPU);
+#else
     isInputValido = FALSE;
-    /*while (!isInputValido) {
+    while (!isInputValido) {
         printf("Seleziona la modalita' di gioco:\n1) Player vs Computer\n2) Player vs Player\nmodalita': ");
         if (inputInt(&numeroModalita) && numeroModalita <= 2 && numeroModalita >= 1) {
             isInputValido = TRUE;
@@ -52,18 +57,27 @@ int main() {
                 modVsCPU = FALSE;
         } else
             printf("Seleziona una modalita' valida!\n");
-    }*/
-    menu_mod(&modVsCPU);
+    }
+#endif
 
     /*ciclo che continua fino alla fine della partita*/
     while (!partita.isEnded) {
         /*stampo l'attuale situazione della partita ed evidenzio l'ultima mossa effettuata*/
         printf("\n");
         if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) == 0)
+#ifdef _WIN32
+            draw(partita.scacchiera, LATO_SCACCHIERA, NULL);
+#else
             multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA, NULL);
+#endif
         else
-            multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA,
+#ifdef _WIN32
+            draw(partita.scacchiera, LATO_SCACCHIERA,
                  &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
+#else
+            multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA,
+                              &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
+#endif
 
         /*risetto la variabile isInputValido a FALSE per poter entrare nel ciclo che richiede la mossa*/
         isInputValido = FALSE;
