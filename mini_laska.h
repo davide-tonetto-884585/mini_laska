@@ -130,7 +130,7 @@ bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS);
  *
  * @return void
  */
-void draw(cella_t *scacchiera, size_t lato, mossa_t *mossa);
+void draw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa);
 
 /**
  * @brief funzione che controlla se la mossa passata è valida secondo le regole del gioco
@@ -147,7 +147,7 @@ void draw(cella_t *scacchiera, size_t lato, mossa_t *mossa);
  *
  * @return 1 se la mossa è valida, 0 altrimenti
  */
-bool_t controlloMossa(cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mossa, enum colore turnoCorrente);
+bool_t controlloMossa(const cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mossa, enum colore turnoCorrente);
 
 /**
  * @brief funzione che restituisce tutte le mosse possibili che può effettuare un giocatore
@@ -162,7 +162,7 @@ bool_t controlloMossa(cella_t *scacchiera, size_t ROWS, size_t COLS, mossa_t mos
  *
  * @return vettore_dinamico_mossa - vettore dinamico di struct mossa (andrà deallocato)
  */
-dyn_arr_mossa_t trovaMosseDisponibili(cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente);
+dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente);
 
 /**
  * funzione che muove la pedina indicata dalle coordinate iniziali alle coordinate finali, conquista se
