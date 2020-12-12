@@ -5,14 +5,6 @@
 #include "graphics/graphics.h"
 #include "utility/utility.h"
 
-int max(int a, int b) {
-    return a > b ? a : b;
-}
-
-int min(int a, int b) {
-    return a < b ? a : b;
-}
-
 bool_t init_game(partita_t *partita, size_t ROWS, size_t COLS) {
     /*variabili utilizzate per ciclare la matrice di Pedine*/
     int r, c;
@@ -421,12 +413,10 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
 
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
              enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
-    dyn_arr_mossa_t mosseDisponibili;
     int i, bestScore, evaluation;
     mossa_t mossaContraria;
 
-    DYN_ARR_INIT_DEFAULT(mosseDisponibili);
-    mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
+    dyn_arr_mossa_t mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
 
     if (maxDepth == currentDepth || DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
         DYN_ARR_DESTROY(mosseDisponibili);
@@ -442,19 +432,8 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
             evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, evaluateBoard);
             bestScore = max(bestScore, evaluation);
 
-            mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
-            mossaContraria.posizionePedina.colonna = mossa.posizioneFinale.colonna;
-            mossaContraria.posizioneFinale.riga = mossa.posizionePedina.riga;
-            mossaContraria.posizioneFinale.colonna = mossa.posizionePedina.colonna;
-
             if (evaluation == bestScore && BIANCO == maxPlayer && currentDepth == 0)
-                /* controllo che non ripeta la una mossa contraria a quella precedentemente fatta */
-                if (DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) >= 3 && DYN_ARR_GET_SIZE(mosseDisponibili) != 1) {
-                    mossa_t mossaPrec = DYN_ARR_GET_ELEM(partita->mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) - 3).mossa;
-                    if (!equalsMossa(mossaPrec, mossaContraria))
-                        *mossaMigliore = mossa;
-                } else
-                    *mossaMigliore = mossa;
+                *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
         }
@@ -467,19 +446,8 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
             evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, evaluateBoard);
             bestScore = min(bestScore, evaluation);
 
-            mossaContraria.posizionePedina.riga = mossa.posizioneFinale.riga;
-            mossaContraria.posizionePedina.colonna = mossa.posizioneFinale.colonna;
-            mossaContraria.posizioneFinale.riga = mossa.posizionePedina.riga;
-            mossaContraria.posizioneFinale.colonna = mossa.posizionePedina.colonna;
-
             if (evaluation == bestScore && NERO == maxPlayer && currentDepth == 0)
-                /* controllo che non ripeta la una mossa contraria a quella precedentemente fatta */
-                if (DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) >= 3 && DYN_ARR_GET_SIZE(mosseDisponibili) != 1) {
-                    mossa_t mossaPrec = DYN_ARR_GET_ELEM(partita->mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita->mosseDettagliatePartita) - 3).mossa;
-                    if (!equalsMossa(mossaPrec, mossaContraria))
-                        *mossaMigliore = mossa;
-                } else
-                    *mossaMigliore = mossa;
+                *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
         }
@@ -497,21 +465,6 @@ int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore
 
 int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS) {
     int score = 0, i, j, segnoColore;
-    /* dyn_arr_mossa_t mosseDisponibili = trovaMosseDisponibili(scacchiera, ROWS, COLS, BIANCO);
-
-    if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0)
-        * il binaco ha perso *
-        score -= 50;
-
-
-    DYN_ARR_DESTROY(mosseDisponibili);
-    mosseDisponibili = trovaMosseDisponibili(scacchiera, ROWS, COLS, NERO);
-
-    if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0)
-        * il nero ha perso *
-        score += 50;
-
-    DYN_ARR_DESTROY(mosseDisponibili); */
 
     for (i = 0; i < ROWS; ++i) {
         for (j = 0; j < COLS; ++j) {

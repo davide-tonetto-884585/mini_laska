@@ -4,7 +4,6 @@
  *  Implementa il gioco mini laska attraverso le funzioni definite su mini_laska.h
  */
 #include <stdio.h>
-#include <unistd.h>
 #include "game_logic.h"
 #include "graphics/graphics.h"
 #include "utility/utility.h"
@@ -43,7 +42,7 @@ int main() {
 
     titolo();
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     menu_mod(&modVsCPU);
 #else
     isInputValido = FALSE;
@@ -64,14 +63,15 @@ int main() {
     while (!partita.isEnded) {
         /*stampo l'attuale situazione della partita ed evidenzio l'ultima mossa effettuata*/
         printf("\n");
+
         if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) == 0)
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
             draw(partita.scacchiera, LATO_SCACCHIERA, NULL);
 #else
             multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA, NULL);
 #endif
         else
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
             draw(partita.scacchiera, LATO_SCACCHIERA,
                  &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
 #else
@@ -91,6 +91,7 @@ int main() {
         if (DYN_ARR_GET_SIZE(mosseDisponibili) == 0) {
             printf("Nessuna mossa disponibile!\n");
             partita.isEnded = TRUE;
+            DYN_ARR_DESTROY(mosseDisponibili);
             break;
         }
 
@@ -104,7 +105,7 @@ int main() {
                     printf(" | ");
                 }
 
-                minimax(&partita, 8, NERO, NERO, &mossaMigliore, evaluateBoard);
+                minimax(&partita, 5, NERO, NERO, &mossaMigliore, evaluateBoard);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
@@ -113,7 +114,7 @@ int main() {
                 muoviPedina(&partita, LATO_SCACCHIERA, mossaMigliore);
                 isInputValido = TRUE;
             } /* else if (partita.turnoCorrente == BIANCO && modVsCPU) {
-                minimax(&partita, 7, BIANCO, BIANCO, &mossaMigliore, evaluateBoard);
+                minimax(&partita, 9, BIANCO, BIANCO, &mossaMigliore, evaluateBoard);
 
                 printf("\nMossa del computer: ");
                 stampaMossa(mossaMigliore);
@@ -130,7 +131,7 @@ int main() {
 
                 /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
                 if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
-                    printf("%d) annulla l'ultima mossa | %d) Resa", i + 1, i + 2);
+                    printf("%d) Annulla l'ultima mossa | %d) Richiedi aiuto | %d) Resa", i + 1, i + 2, i + 3);
 
                 printf("\nInserisci il numero corrispondente all'azione che vuoi effettuare: ");
 
@@ -150,6 +151,12 @@ int main() {
                     annullaUltimaMossa(&partita, LATO_SCACCHIERA);
                     isInputValido = TRUE;
                 } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
+                           DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                    minimax(&partita, 8, partita.turnoCorrente, partita.turnoCorrente, &mossaMigliore, evaluateBoard);
+                    printf("\nMossa suggerita: ");
+                    stampaMossa(mossaMigliore);
+                    printf("\n");
+                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 3 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* il giocatore si è arreso */
                     partita.isEnded = TRUE;

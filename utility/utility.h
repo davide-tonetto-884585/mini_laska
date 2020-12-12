@@ -1,8 +1,29 @@
+/** @file utility.h
+ *  Prototipi delle funzioni di utility
+ */
 #ifndef MINI_LASKA_UTILITY_H
 
 #include "../game_logic.h"
 
 #define INPUT_SIZE (20) /**< costante che definisce la grandezza del buffer di input */
+
+/**
+ * funzione che ritorna il minimo tra i due valori
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+int min(int a, int b);
+
+/**
+ * funzione che ritorna il massimo tra i due valori
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+int max(int a, int b);
 
 /**
  * @brief funzione che passato il turno attuale lo cambia

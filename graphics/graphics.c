@@ -2,7 +2,9 @@
 #include "../utility/utility.h"
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef _WIN32
+
+/* librerie usate per la grafica su windows */
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <conio.h>
 #endif
@@ -10,6 +12,27 @@
 #define C_RED "\x1b[31m"
 #define C_YELLOW "\x1b[33m"
 #define C_RESET "\x1b[0m"
+
+void stampaPedina(const cella_t *scacchiera, size_t rig, size_t col, size_t COLS, size_t altezza) {
+    char square = (char) 219u;
+
+    if (scacchiera[atPosition(rig, col, COLS)].pedine[altezza] != NULL) {
+        printf("    ");
+        if (scacchiera[atPosition(rig, col, COLS)].pedine[altezza]->isPromossa) {
+            if (scacchiera[atPosition(rig, col, COLS)].pedine[altezza]->colore == BIANCO)
+                printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
+            else
+                printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
+        } else {
+            if (scacchiera[atPosition(rig, col, COLS)].pedine[altezza]->colore == BIANCO)
+                printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
+            else
+                printf(C_RED "%c%c%c" C_RESET, square, square, square);
+        }
+        printf("   ");
+    } else
+        printf("          ");
+}
 
 void draw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa) {
     /*variabili utilizzate per ciclare i vari for*/
@@ -56,68 +79,34 @@ void draw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa) {
                         printf("%c%c%c%c%c%c%c%c%c%c", square, square, square, square, square, square, square, square, square, square);
                     else {
                         /*se la pedina nella casella in cui mi trovo ha altezza 0 significa che ? nulla e non la rappresento, altrimenti si*/
-
-                        if (i == 1) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[2] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[2]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[2]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
+                        switch (i) {
+                            case 0:
+                                if (mossa != NULL) {
+                                    if ((k == colonnaPedinaInt && mossaPedinaInt == rig) || (k == colonnaFinaleInt && mossaFinaleInt == rig))
+                                        printf("        %s ", "x");
                                     else
-                                    printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[2]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                    printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 2) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[1] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[1]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[1]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
-                                    else
-                                    printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[1]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                    printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 3) {
-                            if (scacchiera[atPosition(rig, k, lato)].pedine[0] != NULL) {
-                                printf("    ");
-                                if (scacchiera[atPosition(rig, k, lato)].pedine[0]->isPromossa) {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[0]->colore == BIANCO)
-                                        printf(C_YELLOW "%c" C_RESET "%c" C_YELLOW "%c" C_RESET, square, square, square);
-                                    else
-                                    printf(C_RED "%c" C_RESET "%c" C_RED "%c" C_RESET, square, square, square);
-                                } else {
-                                    if (scacchiera[atPosition(rig, k, lato)].pedine[0]->colore == BIANCO)
-                                        printf(C_YELLOW "%c%c%c" C_RESET, square, square, square);
-                                    else
-                                    printf(C_RED "%c%c%c" C_RESET, square, square, square);
-                                }
-                                printf("   ");
-                            } else
-                                printf("          ");
-                        } else if (i == 4) /*stampo le coordinate della casella attuale*/
-                            printf(" %c%d       ", k + 97, abs(rig - (int) lato));
-                        else {
-                            /* evidenzio la mossa se passata */
-                            if (mossa != NULL && i == 0) {
-                                if ((k == colonnaPedinaInt && mossaPedinaInt == rig) || (k == colonnaFinaleInt && mossaFinaleInt == rig))
-                                    printf("        %s ", "x");
-                                else
+                                        printf("          ");
+                                } else
                                     printf("          ");
-                            } else
+
+                                break;
+                            case 1:
+                                stampaPedina(scacchiera, rig, k, lato, 2);
+
+                                break;
+                            case 2:
+                                stampaPedina(scacchiera, rig, k, lato, 1);
+
+                                break;
+                            case 3:
+                                stampaPedina(scacchiera, rig, k, lato, 0);
+
+                                break;
+                            case 4:
+                                printf(" %c%d       ", k + 97, abs(rig - (int) lato));
+
+                                break;
+                            default:
                                 printf("          ");
                         }
                     }
@@ -179,8 +168,7 @@ void multiPlatformDraw(const cella_t *scacchiera, size_t lato, const mossa_t *mo
                         printf("##########");
                     else {
                         /*controllo se mi trovo nella posizione centrale della riga*/
-                        if (i == 1)
-
+                        if (i == 1) {
                             /*se la pedina nella casella in cui mi trovo ha altezza -1 significa che ? nulla e non la rappresento, altrimenti si*/
                             if (scacchiera[atPosition(rig, k, lato)].altezza == 0)
                                 printf("          ");
@@ -205,7 +193,7 @@ void multiPlatformDraw(const cella_t *scacchiera, size_t lato, const mossa_t *mo
 
                                 printf("   ");
                             }
-                        else if (i == 2) /*stampo le coordinate della casella attuale*/
+                        } else if (i == 2) /*stampo le coordinate della casella attuale*/
                             printf(" %c%d       ", k + 97, abs(rig - (int) lato));
                         else {
                             /* evidenzio la mossa se passata */
@@ -225,11 +213,10 @@ void multiPlatformDraw(const cella_t *scacchiera, size_t lato, const mossa_t *mo
                 }
             }
     }
-
 }
 
 /* stampa il titolo mini lasca */
-void titolo(){
+void titolo() {
     printf("\n"
            "  __  __ _       _   _                         \n"
            " |  \\/  (_)     (_) | |                        \n"
@@ -261,7 +248,7 @@ void menu_mod(bool_t *modVsCPU){
 
         system("cls");
         titolo();
-        printf("Seleziona la modalità di gioco:\n\n");
+        printf("Seleziona la modalita' di gioco:\n\n");
         arrow_pos(1, pos);
         printf("Player vs Computer\n");
         arrow_pos(2, pos);
@@ -279,36 +266,5 @@ void menu_mod(bool_t *modVsCPU){
         *modVsCPU = FALSE;
     else
         printf("ERRORE DI SELEZIONE");
-}
-
-/*setta il colore del terminale */
-void menu_color(){
-    int pos = 1, key = 0;
-    system("cls");
-
-    while (key != 13){
-
-        system("cls");
-        printf("Seleziona lo stile del campo:\n\n");
-        arrow_pos(1, pos);
-        printf("Campo bianco , caselle nere\n");
-        arrow_pos(2, pos);
-        printf("Campo nero, caselle bianche\n");
-
-        key = getch();
-        if (key == 80 && pos != 2)
-            pos++;
-        else if (key == 72 && pos != 1)
-            pos--;
-    }
-    fflush(stdin);
-    if (pos == 1)
-        system("color f0");
-    else if (pos == 2)
-        system("color 7");
-    else
-        printf("ERRORE DI SELEZIONE");
-
-    system("cls");
 }
 #endif
