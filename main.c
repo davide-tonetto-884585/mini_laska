@@ -131,7 +131,9 @@ int main() {
 
                 /* se non è la prima mossa della partita do la possibilità ai giocatori di arrendersi e di annullare l'ultima mossa effettuata */
                 if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0)
-                    printf("%d) Annulla l'ultima mossa | %d) Richiedi aiuto | %d) Resa", i + 1, i + 2, i + 3);
+                    printf("%d) Richiedi aiuto | %d) Annulla l'ultima mossa | %d) Resa", i + 1, i + 2, i + 3);
+                else
+                    printf("%d) Richiedi aiuto ", i + 1);
 
                 printf("\nInserisci il numero corrispondente all'azione che vuoi effettuare: ");
 
@@ -142,7 +144,12 @@ int main() {
 
                     /*indico che la mossa è andata a buon fine*/
                     isInputValido = TRUE;
-                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
+                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1) {
+                    minimax(&partita, 8, partita.turnoCorrente, partita.turnoCorrente, &mossaMigliore, evaluateBoard);
+                    printf("\nMossa suggerita: ");
+                    stampaMossa(mossaMigliore);
+                    printf("\n");
+                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* annullo l'ultima mossa del giocatore */
                     /* annula mossa avversaria */
@@ -150,12 +157,6 @@ int main() {
                     /* annulla mossa giocatore */
                     annullaUltimaMossa(&partita, LATO_SCACCHIERA);
                     isInputValido = TRUE;
-                } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
-                           DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
-                    minimax(&partita, 8, partita.turnoCorrente, partita.turnoCorrente, &mossaMigliore, evaluateBoard);
-                    printf("\nMossa suggerita: ");
-                    stampaMossa(mossaMigliore);
-                    printf("\n");
                 } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 3 &&
                            DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
                     /* il giocatore si è arreso */
