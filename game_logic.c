@@ -123,7 +123,7 @@ bool_t controlloMossa(const cella_t *scacchiera, size_t ROWS, size_t COLS, mossa
         return FALSE;
 }
 
-dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore turnoCorrente) {
+dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, size_t COLS, enum colore colore) {
     /*variabili usate per ciclare la scacchiera*/
     int i, j;
 
@@ -146,7 +146,7 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
     } */
 
     /*setto la direzione*/
-    if (turnoCorrente == BIANCO)
+    if (colore == BIANCO)
         direzioneColore = 1;
     else
         direzioneColore = -1;
@@ -165,7 +165,7 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
             altezzaColonna = scacchiera[atPosition(i, j, COLS)].altezza;
 
             /*controllo che il colore della pedina sia corretto*/
-            if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->colore == turnoCorrente) {
+            if (scacchiera[atPosition(i, j, COLS)].pedine[altezzaColonna - 1]->colore == colore) {
                 mossa.posizionePedina.riga = (int) ROWS - i;
                 mossa.posizionePedina.colonna = (char) (j + 97);
 
@@ -173,12 +173,12 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
                 mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (2 * direzioneColore);
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 2);
 
-                if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                     DYN_ARR_PUSH(mosseValideConquista, mossa);
 
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
-                if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                     DYN_ARR_PUSH(mosseValideConquista, mossa);
 
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
@@ -187,12 +187,12 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 2);
 
 
-                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                         DYN_ARR_PUSH(mosseValideConquista, mossa);
 
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 2);
 
-                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                         DYN_ARR_PUSH(mosseValideConquista, mossa);
                 }
 
@@ -203,12 +203,12 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
                 mossa.posizioneFinale.riga = mossa.posizionePedina.riga + (1 * direzioneColore);
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 1);
 
-                if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                     DYN_ARR_PUSH(mosseValide, mossa);
 
                 mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
-                if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                     DYN_ARR_PUSH(mosseValide, mossa);
 
                 /*se la pedina è promossa allora controllo anche le altre due posizioni*/
@@ -216,12 +216,12 @@ dyn_arr_mossa_t trovaMosseDisponibili(const cella_t *scacchiera, size_t ROWS, si
                     mossa.posizioneFinale.riga = mossa.posizionePedina.riga - (1 * direzioneColore);
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna + 1);
 
-                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                         DYN_ARR_PUSH(mosseValide, mossa);
 
                     mossa.posizioneFinale.colonna = (char) (mossa.posizionePedina.colonna - 1);
 
-                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, turnoCorrente))
+                    if (controlloMossa(scacchiera, ROWS, COLS, mossa, colore))
                         DYN_ARR_PUSH(mosseValide, mossa);
                 }
             }
@@ -412,9 +412,8 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
 }
 
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
-             enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
+             enum colore turno, mossa_t *mossaMigliore, int alfa, int beta, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
     int i, bestScore, evaluation;
-    mossa_t mossaContraria;
 
     dyn_arr_mossa_t mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
 
@@ -429,13 +428,17 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, evaluateBoard);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, alfa, beta, evaluateBoard);
             bestScore = max(bestScore, evaluation);
+            /* alfa = max(alfa, bestScore); */
 
             if (evaluation == bestScore && BIANCO == maxPlayer && currentDepth == 0)
                 *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
+
+            /* if (alfa >= beta)
+                break; */
         }
     } else {
         bestScore = INT_MAX;
@@ -443,13 +446,17 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, evaluateBoard);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, alfa, beta, evaluateBoard);
             bestScore = min(bestScore, evaluation);
+            /* beta = min(beta, bestScore); */
 
             if (evaluation == bestScore && NERO == maxPlayer && currentDepth == 0)
                 *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
+
+            /* if (beta <= alfa)
+                break; */
         }
     }
 
@@ -460,7 +467,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
 
 int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno,
             mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
-    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore, evaluateBoard);
+    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore, INT_MIN, INT_MAX, evaluateBoard);
 }
 
 int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS) {
