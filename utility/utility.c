@@ -2,6 +2,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 int max(int a, int b) {
     return a > b ? a : b;
@@ -64,5 +65,17 @@ bool_t inputInt(int *var) {
         return TRUE;
 
     return FALSE;
+}
+
+unsigned int numeriRandom(unsigned int min, unsigned int max){
+    unsigned int numRand;
+
+    srand(time(NULL));/*serve per generare i numer random*/
+
+
+    numRand=rand()%(max-min+1)+min;/*numero random per assegnare il colore ai due giocatori*/
+
+    return numRand;
+
 }
 

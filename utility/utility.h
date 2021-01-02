@@ -107,6 +107,16 @@ bool_t equalsMossa(mossa_t m1, mossa_t m2);
  */
 bool_t inputInt(int *var);
 
+/**
+ * @brief funzione che si occupa di creare un numero random in un range di valori passati
+ *
+ * @param max - numero massimo del range di valori
+ * @param min - numero minimo del range di valori
+ *
+ * @return unsigned int - numero random estratto dal range di valori compreso tra max e min
+ */
+unsigned int numeriRandom(unsigned int min, unsigned int max);
+
 #define MINI_LASKA_UTILITY_H
 
 #endif /*MINI_LASKA_UTILITY_H*/

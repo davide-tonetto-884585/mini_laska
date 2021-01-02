@@ -89,6 +89,17 @@ typedef struct mossa_dettagliata mossa_dettagliata_t;
 DYN_ARR_CREATE(mossa_dettagliata_t); /**< definisco globalmente un vettore dinamico (costituito da una struct) di elementi di tipo struct mossa_dettagliata che poi gestirò tramite la libreria apposita */
 
 /**
+ * @brief struttura che definisce un giocatore
+ *
+ * struttura che definisce nome utente del giocatore e corrispondente colore delle pedine
+ */
+struct player {
+    enum colore colore;
+    char *nome;
+};
+typedef struct player player_t;
+
+/**
  * @brief struttura che definisce lo stato della partita
  *
  * scopo della seguente struct è quello di rappresentare lo stato di una partita a mini laska, quindi memorizzandone
@@ -96,6 +107,8 @@ DYN_ARR_CREATE(mossa_dettagliata_t); /**< definisco globalmente un vettore dinam
  * contenente lo storico delle mosse.
  */
 struct partita {
+    player_t player1;
+    player_t player2;
     enum colore turnoCorrente;
     cella_t scacchiera[LATO_SCACCHIERA * LATO_SCACCHIERA]; /**< matrice flattened di struct cella che rappresenta la scacchiera */
     bool_t isEnded; /**< variabile booleana che definisce se la partita è conclusa (true) o non è conclusa (false) */
@@ -193,7 +206,7 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
  * @return int
  */
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
-        enum colore turno, mossa_t *mossaMigliore, int alfa, int beta, int (*evaluateBoard)(const cella_t *, size_t, size_t));
+             enum colore turno, mossa_t *mossaMigliore, int alfa, int beta, int (*evaluateBoard)(const cella_t *, size_t, size_t));
 
 /**
  * stub della funzione _minimax che implementa la strategia della cpu tramite l'algoritmo di minimax con potatura alfa-beta
@@ -209,7 +222,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
  * @return int
  */
 int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno,
-        mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t));
+            mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t));
 
 /**
  * funzione usata dall'algoritmo di minimax per valutare la scacchiera (startegia di gioco della cpu)
