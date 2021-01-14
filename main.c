@@ -7,7 +7,7 @@
 #include "graphics/graphics.h"
 #include "utility/utility.h"
 
-#define MAX_DIM_NAME_PLAYER (27)
+#define MAX_DIM_NAME_PLAYER (20)
 
 /**
  * main del programma dove viene gestito il gioco tramite l'utilizzo di strutture e funzioni (vedere file mini_laska.h)
@@ -53,8 +53,8 @@ int main() {
         numRand = numeriRandom(0, 5);
 
         titolo();
-        /*  printf("%u\n", numRand);*/
-#if defined(_WIN32) || defined(_WIN64)
+
+        /*#if defined(_WIN32) || defined(_WIN64)
         menu_mod(&modVsCPU);
         menu_diff(&difficolta);
         menu_nome(&modVsCPU, &partita, &player1[0], &player2[0], &difficolta);
@@ -66,7 +66,9 @@ int main() {
             partita.player2.colore=BIANCO;
             partita.player1.colore=NERO;
         }
-#else
+        #else*/
+
+
         isInputValido = FALSE;
         while (!isInputValido) {
             printf("Seleziona la modalita' di gioco:\n1) Player vs Computer\n2) Player vs Player\nmodalita': ");
@@ -84,7 +86,7 @@ int main() {
         if (modVsCPU) {
 
             printf("\nGiocatore, inserisci il tuo nome utente: ");
-            scanf("%s", player1);
+            scanf("%19s", player1);
             getchar();
 
             partita.player1.nome = player1;
@@ -122,7 +124,7 @@ int main() {
         } else {/*fa inserire i nomi ai giocatori*/
 
             printf("\nGiocatore uno, inserisci il tuo nome utente: ");
-            scanf("%s", player1);
+            scanf("%19s", player1);
             getchar();
 
             partita.player1.nome = player1;
@@ -141,7 +143,8 @@ int main() {
                 partita.player1.colore = NERO;
             }
         }
-#endif
+
+        /*#endif*/
 
         /*ciclo che continua fino alla fine della partita*/
         while (!partita.isEnded) {
@@ -149,20 +152,20 @@ int main() {
             printf("\n");
 
             if (DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) == 0)
-#if defined(_WIN32) || defined(_WIN64)
+                /* #if defined(_WIN32) || defined(_WIN64)
                 draw(partita.scacchiera, LATO_SCACCHIERA, NULL);
-#else
+                #else */
                 multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA, NULL);
-#endif
+                /* #endif */
             else
-#if defined(_WIN32) || defined(_WIN64)
+                /* #if defined(_WIN32) || defined(_WIN64)
                 draw(partita.scacchiera, LATO_SCACCHIERA,
                      &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita, DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
-#else
+                #else */
                 multiPlatformDraw(partita.scacchiera, LATO_SCACCHIERA,
                                   &DYN_ARR_GET_ELEM(partita.mosseDettagliatePartita,
                                                     DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) - 1).mossa);
-#endif
+                /* #endif */
 
             /*risetto la variabile isInputValido a FALSE per poter entrare nel ciclo che richiede la mossa*/
             isInputValido = FALSE;

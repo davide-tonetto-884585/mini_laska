@@ -37,13 +37,13 @@ void draw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa);
  */
 void multiPlatformDraw(const cella_t *scacchiera, size_t lato, const mossa_t *mossa);
 
-#if defined(_WIN32) || defined(_WIN64)
-/* funzione che gestisce la selezione dell'opzione */
+/* #if defined(_WIN32) || defined(_WIN64)
+ * funzione che gestisce la selezione dell'opzione *
 void arrow_pos(int real_pos, int arrow_pos);
 
-/* menu interattivo che setta la modalità di gioco */
+ * menu interattivo che setta la modalità di gioco *
 void menu_mod(bool_t *modVsCPU);
-#endif
+#endif */
 
 /* stampa il titolo "mini lasca" */
 void titolo();

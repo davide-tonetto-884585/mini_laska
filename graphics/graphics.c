@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 /* librerie usate per la grafica su windows */
-#if defined(_WIN32) || defined(_WIN64)
+/* #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <conio.h>
-#endif
+#endif */
 
 #define C_RED "\x1b[31m"
 #define C_YELLOW "\x1b[33m"
@@ -228,8 +228,8 @@ void titolo() {
            "                                               \n");
 }
 
-#ifdef _WIN32
-/* funzione che gestisce la selezione dell'opzione */
+/* #ifdef _WIN32
+ * funzione che gestisce la selezione dell'opzione *
 void arrow_pos(int real_pos, int arrow_pos){
     if (real_pos == arrow_pos)
         printf("    > ");
@@ -237,7 +237,7 @@ void arrow_pos(int real_pos, int arrow_pos){
         printf("      ");
 }
 
-/* menu interattivo che setta la modalità di gioco */
+ * menu interattivo che setta la modalità di gioco *
 void menu_mod(bool_t *modVsCPU){
     int pos = 1, key = 0;
 
@@ -267,4 +267,4 @@ void menu_mod(bool_t *modVsCPU){
     else
         printf("ERRORE DI SELEZIONE");
 }
-#endif
+#endif */
