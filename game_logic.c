@@ -412,7 +412,7 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS) {
 }
 
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
-             enum colore turno, mossa_t *mossaMigliore, int alfa, int beta, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
+             enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
     int i, bestScore, evaluation;
 
     dyn_arr_mossa_t mosseDisponibili = trovaMosseDisponibili(partita->scacchiera, ROWS, COLS, turno);
@@ -428,17 +428,13 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, alfa, beta, evaluateBoard);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, NERO, mossaMigliore, evaluateBoard);
             bestScore = max(bestScore, evaluation);
-            /* alfa = max(alfa, bestScore); */
 
             if (evaluation == bestScore && BIANCO == maxPlayer && currentDepth == 0)
                 *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
-
-            /* if (alfa >= beta)
-                break; */
         }
     } else {
         bestScore = INT_MAX;
@@ -446,17 +442,13 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
         for (i = 0; i < DYN_ARR_GET_SIZE(mosseDisponibili); i++) {
             mossa_t mossa = DYN_ARR_GET_ELEM(mosseDisponibili, i);
             muoviPedina(partita, COLS, mossa);
-            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, alfa, beta, evaluateBoard);
+            evaluation = _minimax(partita, ROWS, COLS, maxDepth, currentDepth + 1, maxPlayer, BIANCO, mossaMigliore, evaluateBoard);
             bestScore = min(bestScore, evaluation);
-            /* beta = min(beta, bestScore); */
 
             if (evaluation == bestScore && NERO == maxPlayer && currentDepth == 0)
                 *mossaMigliore = mossa;
 
             annullaUltimaMossa(partita, COLS);
-
-            /* if (beta <= alfa)
-                break; */
         }
     }
 
@@ -467,7 +459,7 @@ int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int cur
 
 int minimax(partita_t *partita, int maxDepth, enum colore maxPlayer, enum colore turno,
             mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t)) {
-    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore, INT_MIN, INT_MAX, evaluateBoard);
+    return _minimax(partita, LATO_SCACCHIERA, LATO_SCACCHIERA, maxDepth, 0, maxPlayer, turno, mossaMigliore, evaluateBoard);
 }
 
 int evaluateBoard(const cella_t *scacchiera, size_t ROWS, size_t COLS) {

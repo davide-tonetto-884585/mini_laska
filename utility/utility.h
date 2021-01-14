@@ -1,5 +1,5 @@
 /** @file utility.h
- *  Prototipi delle funzioni di utility
+ *  @brief Prototipi delle funzioni di utility utilizzate nel programma
  */
 #ifndef MINI_LASKA_UTILITY_H
 

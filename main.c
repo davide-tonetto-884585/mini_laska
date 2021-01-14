@@ -1,6 +1,41 @@
 /** @file main.c
  *  @mainpage main Mini Laska
- *  @brief Implementa il gioco mini laska attraverso le funzioni definite su mini_laska.h
+ *  @brief Programma che implementa il gioco mini laska
+ *
+ *  @section intro_sec Introduzione
+ *
+ *  Questo programma permette agli utenti di giocare alla variante "mini laska" del noto gioco "laska".
+ *  Il Laska, a volte chiamato Laskers o Lasca, è un gioco da tavolo molto intrigante ed emozionante inventato nel
+ *  1911 dal grande maestro di scacchi Emanuel Lasker. A prima vista il gioco assomiglia alle dama;
+ *  il mini laska è una variante del laska originale che rende il gioco più simile alla dama ma sempre con
+ *  alcune differenze
+ *
+ *  @section rules_sec Regole
+ *
+ *  mini Laska si gioca con i pezzi della dama su una scacchiera sette per sette, i pezzi si muovono come nella dama
+ *  con l'unica differenza che quando si mangia una pedina questa verrà conquistata e non eliminata, cioè la pedina andrà
+ *  posta sotto la pedina che ha conquistato. Quando si conquista una pedina se questa ha una altezza maggiore di uno verrà
+ *  presa solo l'ultima pedina e quelle sottostanti verranno liberate.
+ *  il limite in altezza di una torre è di tre pedine e in caso una torre alta tre conquisti la pedina conquistata verrà rimossa dal gioco.
+ *  Altra regola importante è la promozione che, come nella dama, prevede che se una pedina raggiunge il lato opposto del campo
+ *  verrà promossa e potrà muoversi anche all'indietro.
+ *  Perde il giocatore che rimane senza pedine o non ha più mosse a sua disposizione.
+ *
+ *  @section command_sec Funzionamento del programma
+ *
+ *  Il programma presenta la possibilità di giocare tra due utenti dallo stesso computer o di giocare contro il computer stesso.
+ *  Inizialmente verrà quindi richiesta la modalita di gioco, in seguito i nomi dei giocatori e, in caso si giochi contro il computer,
+ *  la difficoltà (facile, media o difficile). I colori (bianco o nero) dei giocatori viene assegnato casualmente a inizio partita;
+ *  durante la partita è possibile richiedere un suggerimento sulla mossa da effettuare, annullare la propria ultima mossa effettuata,
+ *  questo dovrà venire accettato dall'avversario (il computer sceglie casualmente se accettare o meno), annullando l'ultima mossa si tornerà
+ *  indietro di una mossa dell'avversario e una propria, infine è possibile arrendersi durante la partita.
+ *
+ *  @section graphic_sec Nota sulla grafica
+ *
+ *  attualmente il programma utilizza una grafica "multipiattaforma" minimale da terminale che identifica le pedine bianche con la
+ *  lettera b (B se promosse) e le pedine nere con la lettera n (N se promosse).
+ *  Inoltre abbiamo sviluppato una visualizzazione più bella sempre da terminale per windows ma per evitare problemi di
+ *  compatibilità abbiamo preferito commentarla al momento, verrà però mostrata durante l'orale.
  */
 #include <stdio.h>
 #include "game_logic.h"

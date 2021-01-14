@@ -1,4 +1,4 @@
-/** @file mini_laska.h
+/** @file game_logic.h
  *  @brief Prototipi delle funzioni per la gestione del gioco
  *
  *  Contiene i protoptipi delle funzioni che gestiscono
@@ -188,7 +188,7 @@ mossa_dettagliata_t muoviPedina(partita_t *partita, size_t COLS, mossa_t mossa);
 bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
 
 /**
- * funzione che implementa l'algoritmo minimax con potatura alfa-beta per il calcolo della mossa migliore per il computer
+ * funzione che implementa l'algoritmo minimax per il calcolo della mossa migliore per il computer
  *
  * @param partita - puntatore alla partita corrente
  * @param ROWS - numero righe scacchiera
@@ -198,18 +198,16 @@ bool_t annullaUltimaMossa(partita_t *partita, size_t COLS);
  * @param maxPlayer - giocatore da massimizzare
  * @param turno - turno corrente nella partita
  * @param mossaMigliore - puntatore a mossa_t dove si salverà la miglio mossa calcolata
- * @param alfa
- * @param beta
  * @param evaluateBoard - puntatore a funzione che valuta la scacchiera e restituisce un intero (negativo see la scacchiera è a favore del nero,
  * positivo altrimenti), parametri della funzione sonovla matrice flattened rappresentante la scacchiera, le righe e le colonne
  *
  * @return int
  */
 int _minimax(partita_t *partita, size_t ROWS, size_t COLS, int maxDepth, int currentDepth, enum colore maxPlayer,
-             enum colore turno, mossa_t *mossaMigliore, int alfa, int beta, int (*evaluateBoard)(const cella_t *, size_t, size_t));
+             enum colore turno, mossa_t *mossaMigliore, int (*evaluateBoard)(const cella_t *, size_t, size_t));
 
 /**
- * stub della funzione _minimax che implementa la strategia della cpu tramite l'algoritmo di minimax con potatura alfa-beta
+ * stub della funzione _minimax che implementa la strategia della cpu tramite l'algoritmo di minimax
  *
  * @param partita - puntatore alla partita corrente
  * @param maxDepth - profondità massima di calcolo da parte dell'algoritmo
