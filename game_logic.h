@@ -10,6 +10,13 @@
 
 #define LATO_SCACCHIERA (7) /**< Costante che definisce la lunghezza di ciascun lato della scacchiera */
 
+#define MAX_DIM_NAME_PLAYER (20) /**< massimo numero di caratteri per il nome dei giocatori */
+#define MAX_MOSSE_ANNULLABILI (3) /**< massimo di mosse annullabili a partita */
+#define MAX_AIUTI_DISPONIBILI (7) /**< massimo di aiuti disponibili in modalià player vs player */
+#define MAX_AIUTI_DISP_WALLE (11) /**< massimo di aiuti disponibili in modalità player vs cpu contro wall-e */
+#define MAX_AIUTI_DISP_VIKI (9) /**< massimo di aiuti disponibili in modalità player vs cpu contro viki */
+#define MAX_AIUTI_DISP_HAL (5) /**< massimo di aiuti disponibili in modalità player vs cpu contro hal-9000 */
+
 /**
  * @brief enum che definisce di che colore possono essere le pedine
  *
@@ -92,10 +99,13 @@ DYN_ARR_CREATE(mossa_dettagliata_t); /**< definisco globalmente un vettore dinam
  * @brief struttura che definisce un giocatore
  *
  * struttura che definisce nome utente del giocatore e corrispondente colore delle pedine
+ * inoltre è prsente un contatore per le mosse annullate, in modo da fissarne un limite
  */
 struct player {
     enum colore colore;
     char *nome;
+    unsigned int totMosseAnnullate;
+    unsigned int totAiutiUsati;
 };
 typedef struct player player_t;
 

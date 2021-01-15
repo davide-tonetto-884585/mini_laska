@@ -228,6 +228,8 @@ void titolo() {
            "                                               \n");
 }
 
+
+/****************************grafica windows commentata*******************************/
 /* #ifdef _WIN32
  * funzione che gestisce la selezione dell'opzione *
 void arrow_pos(int real_pos, int arrow_pos){
@@ -266,5 +268,71 @@ void menu_mod(bool_t *modVsCPU){
         *modVsCPU = FALSE;
     else
         printf("ERRORE DI SELEZIONE");
+}
+
+* menu interattivo che setta la difficolta di gioco *
+void menu_diff(int *difficolta){
+    int pos = 1, key = 0;
+
+    fflush(stdin);
+    system("cls");
+
+    while (key != 13) {
+
+        system("cls");
+        titolo();
+
+        printf("Seleziona contro chi vuoi giocare:\n\n");
+        arrow_pos(1, pos);
+        printf("Wall-E\n");
+        arrow_pos(2, pos);
+        printf("VIKI\n");
+        arrow_pos(3, pos);
+        printf("HAL 9000\n");
+
+        key = getch();
+        if (key == 80 && pos != 3)
+            pos++;
+        else if (key == 72 && pos != 1)
+            pos--;
+    }
+    if (pos == 1)
+        *difficolta = 1;
+    else if (pos == 2)
+        *difficolta = 2;
+    else if (pos == 3)
+        *difficolta = 3;
+}
+
+* menu che setta il nome dei giocatori *
+void menu_nome(bool_t *modVsCPU, partita_t *partita, char *player1, char *player2, int *difficolta){
+    if (modVsCPU){
+        printf("\nGiocatore, inserisci il tuo nome utente: ");
+        scanf("%s", player1);
+        getchar();
+
+        partita->player1.nome=player1;
+        if (*difficolta == 1)
+            partita->player2.nome="Wall-E";
+        else if (*difficolta == 2)
+            partita->player2.nome="VIKI";
+        else if (*difficolta == 3)
+            partita->player2.nome="HAL 9000";
+        else
+            printf("ERRORE IN menu_nome!!");
+    }
+    else{
+        printf("\nGiocatore uno, inserisci il tuo nome utente: ");
+        scanf("%s", player1);
+        getchar();
+
+        partita->player1.nome = player1;
+
+        printf("\nGiocatore due, inserisci il tuo nome utente: ");
+        scanf("%s", player2);
+        getchar();
+
+        partita->player2.nome = player2;
+    }
 }
 #endif */
