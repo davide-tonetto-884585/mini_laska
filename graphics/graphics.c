@@ -4,10 +4,10 @@
 #include <stdlib.h>
 
 /* librerie usate per la grafica su windows */
-/* #if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <conio.h>
-#endif */
+#endif
 
 #define C_RED "\x1b[31m"
 #define C_YELLOW "\x1b[33m"
@@ -230,8 +230,8 @@ void titolo() {
 
 
 /****************************grafica windows commentata*******************************/
-/* #ifdef _WIN32
- * funzione che gestisce la selezione dell'opzione *
+#ifdef _WIN32
+ /* funzione che gestisce la selezione dell'opzione */
 void arrow_pos(int real_pos, int arrow_pos){
     if (real_pos == arrow_pos)
         printf("    > ");
@@ -270,7 +270,7 @@ void menu_mod(bool_t *modVsCPU){
         printf("ERRORE DI SELEZIONE");
 }
 
-* menu interattivo che setta la difficolta di gioco *
+/* menu interattivo che setta la difficolta di gioco */
 void menu_diff(int *difficolta){
     int pos = 1, key = 0;
 
@@ -303,36 +303,4 @@ void menu_diff(int *difficolta){
     else if (pos == 3)
         *difficolta = 3;
 }
-
-* menu che setta il nome dei giocatori *
-void menu_nome(bool_t *modVsCPU, partita_t *partita, char *player1, char *player2, int *difficolta){
-    if (modVsCPU){
-        printf("\nGiocatore, inserisci il tuo nome utente: ");
-        scanf("%s", player1);
-        getchar();
-
-        partita->player1.nome=player1;
-        if (*difficolta == 1)
-            partita->player2.nome="Wall-E";
-        else if (*difficolta == 2)
-            partita->player2.nome="VIKI";
-        else if (*difficolta == 3)
-            partita->player2.nome="HAL 9000";
-        else
-            printf("ERRORE IN menu_nome!!");
-    }
-    else{
-        printf("\nGiocatore uno, inserisci il tuo nome utente: ");
-        scanf("%s", player1);
-        getchar();
-
-        partita->player1.nome = player1;
-
-        printf("\nGiocatore due, inserisci il tuo nome utente: ");
-        scanf("%s", player2);
-        getchar();
-
-        partita->player2.nome = player2;
-    }
-}
-#endif */
+#endif

@@ -108,16 +108,17 @@ int main() {
 
         titolo();
 
-        /*#if defined(_WIN32) || defined(_WIN64)
+        /*******************************parte grafica windows****************************/
+        #if defined(_WIN32) || defined(_WIN64)
         menu_mod(&modVsCPU);
         if (modVsCPU) {
-            //deve richiedere il nome del giocatore
+            menu_diff(&difficolta);
+
             printf("\nGiocatore, inserisci il tuo nome utente: ");
             scanf("%19s", player1);
             getchar();
-            partita.player1.nome = player1;
 
-            menu_diff(&difficolta);
+            partita.player1.nome = player1;
 
             switch (difficolta) {
                 case 1: {
@@ -141,11 +142,21 @@ int main() {
                 }
             }
         } else {
-            //richiedo nomi giocatori
-            menu_nome(&modVsCPU, &partita, &player1[0], &player2[0], &difficolta);
+            /* richiedo nomi giocatori */
+            printf("\nGiocatore uno, inserisci il tuo nome utente: ");
+            scanf("%19s", player1);
+            getchar();
+
+            partita.player1.nome = player1;
+
+            printf("\nGiocatore due, inserisci il tuo nome utente: ");
+            scanf("%s", player2);
+            getchar();
+
+            partita.player2.nome = player2;
         }
 
-        #else*/
+        #else
 
 
         isInputValido = FALSE;
@@ -215,7 +226,7 @@ int main() {
             partita.player2.nome = player2;
         }
 
-        /*#endif*/
+        #endif
 
         /*ciclo che continua fino alla fine della partita*/
         while (!partita.isEnded) {
@@ -320,9 +331,7 @@ int main() {
                                         printf("%d) Richiedi aiuto (max: %d) | %d) Resa",
                                                i + 1, maxAiutiDisponibili - partita.player1.totAiutiUsati, i + 2);
                                     else
-                                        printf("%d) Annulla l'ultima mossa (max: %d) | %d) Resa",
-                                               i + 1, MAX_MOSSE_ANNULLABILI - partita.player1.totMosseAnnullate,
-                                               i + 2);
+                                        printf("%d) Resa", i + 1);
                                 }
                             } else {
                                 if (partita.player2.totMosseAnnullate < MAX_MOSSE_ANNULLABILI) {
@@ -335,13 +344,11 @@ int main() {
                                                i + 1, MAX_MOSSE_ANNULLABILI - partita.player2.totMosseAnnullate,
                                                i + 2);
                                 } else {
-                                    if (partita.player1.totAiutiUsati < maxAiutiDisponibili)
+                                    if (partita.player2.totAiutiUsati < maxAiutiDisponibili)
                                         printf("%d) Richiedi aiuto (max: %d) | %d) Resa",
-                                               i + 1, maxAiutiDisponibili - partita.player1.totAiutiUsati, i + 2);
+                                               i + 1, maxAiutiDisponibili - partita.player2.totAiutiUsati, i + 2);
                                     else
-                                        printf("%d) Annulla l'ultima mossa (max: %d) | %d) Resa",
-                                               i + 1, MAX_MOSSE_ANNULLABILI - partita.player1.totMosseAnnullate,
-                                               i + 2);
+                                        printf("%d) Resa", i + 1);
                                 }
                             }
 
@@ -361,9 +368,7 @@ int main() {
                                         printf("%d) Richiedi aiuto (max: %d) | %d) Resa",
                                                i + 1, maxAiutiDisponibili - partita.player1.totAiutiUsati, i + 2);
                                     else
-                                        printf("%d) Annulla l'ultima mossa (max: %d) | %d) Resa",
-                                               i + 1, MAX_MOSSE_ANNULLABILI - partita.player1.totMosseAnnullate,
-                                               i + 2);
+                                        printf("%d) Resa", i + 1);
                                 }
                             } else {
                                 if (partita.player2.totMosseAnnullate < MAX_MOSSE_ANNULLABILI) {
@@ -376,13 +381,11 @@ int main() {
                                                i + 1, MAX_MOSSE_ANNULLABILI - partita.player2.totMosseAnnullate,
                                                i + 2);
                                 } else {
-                                    if (partita.player1.totAiutiUsati < maxAiutiDisponibili)
+                                    if (partita.player2.totAiutiUsati < maxAiutiDisponibili)
                                         printf("%d) Richiedi aiuto (max: %d) | %d) Resa",
-                                               i + 1, maxAiutiDisponibili - partita.player1.totAiutiUsati, i + 2);
+                                               i + 1, maxAiutiDisponibili - partita.player2.totAiutiUsati, i + 2);
                                     else
-                                        printf("%d) Annulla l'ultima mossa (max: %d) | %d) Resa",
-                                               i + 1, MAX_MOSSE_ANNULLABILI - partita.player1.totMosseAnnullate,
-                                               i + 2);
+                                        printf("%d) Resa", i + 1);
                                 }
                             }
 
@@ -439,7 +442,7 @@ int main() {
                             stampaMossa(mossaMigliore);
                             printf("\n");
                         } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
-                                   DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0 &&
+                                   DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1 &&
                                    ((partita.turnoCorrente == partita.player1.colore &&
                                      partita.player1.totMosseAnnullate < MAX_MOSSE_ANNULLABILI) ||
                                     ((partita.turnoCorrente == partita.player2.colore &&
@@ -548,7 +551,7 @@ int main() {
                                    ((partita.turnoCorrente == partita.player2.colore &&
                                      partita.player2.totMosseAnnullate < MAX_MOSSE_ANNULLABILI))) {
                             if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 3 &&
-                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1) {
                                 /* il giocatore si è arreso */
                                 partita.isEnded = TRUE;
                                 break;
@@ -556,7 +559,7 @@ int main() {
                                 printf("\nMossa non valida! Inserire nuovamente una mossa valida.\n");
                         } else {
                             if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
-                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1) {
                                 /* il giocatore si è arreso */
                                 partita.isEnded = TRUE;
                                 break;
@@ -573,7 +576,7 @@ int main() {
                             /*indico che la mossa è andata a buon fine*/
                             isInputValido = TRUE;
                         } else if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
-                                   DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0 &&
+                                   DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1 &&
                                    ((partita.turnoCorrente == partita.player1.colore &&
                                      partita.player1.totMosseAnnullate < MAX_MOSSE_ANNULLABILI) ||
                                     ((partita.turnoCorrente == partita.player2.colore &&
@@ -681,7 +684,7 @@ int main() {
                                    ((partita.turnoCorrente == partita.player2.colore &&
                                      partita.player2.totMosseAnnullate < MAX_MOSSE_ANNULLABILI))) {
                             if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 2 &&
-                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1) {
                                 /* il giocatore si è arreso */
                                 partita.isEnded = TRUE;
                                 break;
@@ -689,7 +692,7 @@ int main() {
                                 printf("\nMossa non valida! Inserire nuovamente una mossa valida.\n");
                         } else {
                             if (numeroMossa == DYN_ARR_GET_SIZE(mosseDisponibili) + 1 &&
-                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 0) {
+                                DYN_ARR_GET_SIZE(partita.mosseDettagliatePartita) > 1) {
                                 /* il giocatore si è arreso */
                                 partita.isEnded = TRUE;
                                 break;
